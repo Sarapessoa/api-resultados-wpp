@@ -1,6 +1,7 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const path = require('path');
+const venom = require('venom-bot');
 
 dotenv.config();
 
@@ -12,7 +13,6 @@ app.get('/qrcode', (req, res) => {
     // deleteTokenResultados();
 
     const fs = require('fs');
-    const venom = require('venom-bot');
     const qrcode = require('qrcode-terminal');
 
     venom
@@ -68,7 +68,6 @@ app.get('/start', (req, res) => {
     if(!tokenExist()) return res.send('Dispositivo não conectado!');
 
     const fs = require('fs');
-    const venom = require('venom-bot');
 
     venom
     .create({
@@ -81,15 +80,6 @@ app.get('/start', (req, res) => {
     });
 });
 
-// const fs = require('fs');
-// const venom = require('venom-bot');
-
-// venom.create({
-//     session: 'sessionBotResultados',
-//     headless: 'old',
-//   }).then((client)=> {
-//     start(client);
-//   });
 
 function start(client) {
     client.onMessage((message) => {
@@ -184,6 +174,18 @@ function rewriteCode(code) {
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
     console.log(`Servidor novo em execução na porta ${port}`);
+
+    if(tokenExist()){
+        venom
+        .create({
+          session: 'sessionBotResultados', //name of session
+          headless: 'old'
+        })
+        .then((client) => start(client))
+        .catch((erro) => {
+          console.log(erro);
+        });
+    }
 });
 
 function deleteTokenResultados() {
