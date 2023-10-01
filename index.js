@@ -6,7 +6,8 @@ const venom = require('venom-bot');
 dotenv.config();
 
 const app = express();
-app.use(express.json());
+
+app.use(express.json({ extended: true, limit: '10mb', timeout: 120000 })); // 120 segundos (2 minutos)
 
 // Rota para gerar o QR code
 app.get('/qrcode', (req, res) => {
