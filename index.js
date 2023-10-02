@@ -9,6 +9,16 @@ const app = express();
 
 app.use(express.json({ extended: true, limit: '10mb', timeout: 120000 })); // 120 segundos (2 minutos)
 
+const chromiumArgs = [
+    '--disable-web-security', '--no-sandbox', '--disable-web-security',
+    '--aggressive-cache-discard', '--disable-cache', '--disable-application-cache',
+    '--disable-offline-load-stale-cache', '--disk-cache-size=0',
+    '--disable-background-networking', '--disable-default-apps', '--disable-extensions',
+    '--disable-sync', '--disable-translate', '--hide-scrollbars', '--metrics-recording-only',
+    '--mute-audio', '--no-first-run', '--safebrowsing-disable-auto-update',
+    '--ignore-certificate-errors', '--ignore-ssl-errors', '--ignore-certificate-errors-spki-list'
+  ];
+
 // Rota para gerar o QR code
 app.get('/qrcode', (req, res) => {
     // deleteTokenResultados();
@@ -53,7 +63,8 @@ app.get('/qrcode', (req, res) => {
 
             },
             {
-                logQR: false
+                logQR: false,
+                browserArgs: chromiumArgs,
             }
         )
         .then((client) => {
@@ -73,7 +84,8 @@ app.get('/start', (req, res) => {
     venom
     .create({
       session: 'sessionBotResultados', //name of session
-      headless: 'old'
+      headless: 'old',
+      browserArgs: chromiumArgs,
     })
     .then((client) => start(client))
     .catch((erro) => {
@@ -202,7 +214,8 @@ app.listen(port, () => {
         venom
         .create({
           session: 'sessionBotResultados', //name of session
-          headless: 'old'
+          headless: 'old',
+          browserArgs: chromiumArgs,
         })
         .then((client) => start(client))
         .catch((erro) => {
