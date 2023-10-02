@@ -1,3 +1,5 @@
-2023/10/01-20:28:15.108 2b20 Reusing MANIFEST E:\Users\Public\OneDrive\Documentos\Sara\Pessoal\Projetos\Api_Wpp_2\tokens\sessionBotResultados\Default\Local Storage\leveldb/MANIFEST-000001
-2023/10/01-20:28:15.109 2b20 Recovering log #3
-2023/10/01-20:28:15.109 2b20 Reusing old log E:\Users\Public\OneDrive\Documentos\Sara\Pessoal\Projetos\Api_Wpp_2\tokens\sessionBotResultados\Default\Local Storage\leveldb/000003.log 
+2023/10/01-21:12:31.239 5c5c Reusing MANIFEST E:\Users\Public\OneDrive\Documentos\Sara\Pessoal\Projetos\Api_Wpp_2\tokens\sessionBotResultados\Default\Local Storage\leveldb/MANIFEST-000001
+2023/10/01-21:12:31.240 5c5c Recovering log #3
+2023/10/01-21:12:31.240 5c5c Level-0 table #3: started
+2023/10/01-21:12:31.292 5c5c Level-0 table #3: 16999 bytes OK
+2023/10/01-21:12:31.342 5c5c Delete type=0 #3

@@ -81,6 +81,17 @@ app.get('/start', (req, res) => {
     });
 });
 
+app.post('/teste1', (req, res) => {
+    const msg = req.body.data;
+    console.log(msg)
+
+    const resposta = {
+        mensagem: msg
+    };
+
+    return res.json(resposta)
+});
+
 
 function start(client) {
     client.onMessage((message) => {
@@ -88,6 +99,17 @@ function start(client) {
         if (message.body == 'faça deste o grupo de resultados') {
             rewriteCode(message.from);
         }
+    });
+
+    app.post('/teste2', (req, res) => {
+        const msg = req.body.data;
+        console.log(msg)
+    
+        const resposta = {
+            mensagem: msg
+        };
+    
+        return res.json(resposta)
     });
 
 
