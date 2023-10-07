@@ -4,6 +4,7 @@ const path = require('path');
 const venom = require('venom-bot');
 const http = require('http');
 const socketIo = require('socket.io');
+const cors = require('cors');
 
 dotenv.config();
 
