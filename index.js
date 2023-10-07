@@ -446,7 +446,7 @@ function rewriteCode(code) {
 }
 
 // Inicie o servidor na porta de sua escolha
-const port = process.env.PORT || 3000;
+const port = 3000;
 
 server.listen(port, () => {
     console.log(`Servidor socket novo em execução na porta ${port}`);
