@@ -12,7 +12,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-// const server = http.createServer(app).setTimeout(300000);
 
 // Inicie o servidor na porta de sua escolha
 const port = 3000;
@@ -44,38 +43,6 @@ const server = http.createServer(app).listen(port, (req, res) => {
             });
     }
 })
-
-// const server = app.listen(port, () => {
-//     console.log(`Servidor socket novo em execução na porta ${port}`);
-
-//     if(tokenExist()){
-//         console.log('existe');
-//         // deleteTokenResultados();
-//     }
-//     else{
-//         console.log('nao existe');
-//         if(socket != undefined){
-//             socket.emit('statusClient', 'DISCONNECT');
-//         }
-//     }
-
-//     if (tokenExist()) {
-//         venom
-//             .create({
-//                 session: 'sessionBotResultados', //name of session
-//                 headless: 'old',
-//                 browserArgs: chromiumArgs,
-//             })
-//             .then((client) => start(client))
-//             .catch((erro) => {
-//                 console.log(erro);
-//             });
-//     }
-// });
-
-// const io = require('socket.io')(server, { cors: { origin: '*' }});
-// const io = require('socket.io').listen(server);
-
 const io = socketIo(server)
 
 
