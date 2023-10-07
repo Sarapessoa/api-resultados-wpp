@@ -11,22 +11,22 @@ dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({extended: false}));
+app.use(express.urlencoded({ extended: false }));
 // const server = http.createServer(app).setTimeout(300000);
 
 // Inicie o servidor na porta de sua escolha
 const port = 3000;
 
-const server = app.listen(port, () => {
+const server = http.createServer(app).listen(port, (req, res) => {
     console.log(`Servidor socket novo em execução na porta ${port}`);
 
-    if(tokenExist()){
+    if (tokenExist()) {
         console.log('existe');
         // deleteTokenResultados();
     }
-    else{
+    else {
         console.log('nao existe');
-        if(socket != undefined){
+        if (socket != undefined) {
             socket.emit('statusClient', 'DISCONNECT');
         }
     }
@@ -43,9 +43,40 @@ const server = app.listen(port, () => {
                 console.log(erro);
             });
     }
-});
+})
 
-const io = require('socket.io')(server, { cors: { origin: '*' }});
+// const server = app.listen(port, () => {
+//     console.log(`Servidor socket novo em execução na porta ${port}`);
+
+//     if(tokenExist()){
+//         console.log('existe');
+//         // deleteTokenResultados();
+//     }
+//     else{
+//         console.log('nao existe');
+//         if(socket != undefined){
+//             socket.emit('statusClient', 'DISCONNECT');
+//         }
+//     }
+
+//     if (tokenExist()) {
+//         venom
+//             .create({
+//                 session: 'sessionBotResultados', //name of session
+//                 headless: 'old',
+//                 browserArgs: chromiumArgs,
+//             })
+//             .then((client) => start(client))
+//             .catch((erro) => {
+//                 console.log(erro);
+//             });
+//     }
+// });
+
+// const io = require('socket.io')(server, { cors: { origin: '*' }});
+// const io = require('socket.io').listen(server);
+
+const io = socketIo(server)
 
 
 let socket;
@@ -61,69 +92,13 @@ const chromiumArgs = [
     '--ignore-certificate-errors', '--ignore-ssl-errors', '--ignore-certificate-errors-spki-list'
 ];
 
-// Rota para gerar o QR code
-app.get('/qrcode', (req, res) => {
-    // deleteTokenResultados();
-
-    const fs = require('fs');
-    const qrcode = require('qrcode-terminal');
-
-    venom
-        .create(
-            'sessionBotResultados',
-            (base64Qr, asciiQR, attempts, urlCode) => {
-                console.log(asciiQR); // Optional to log the QR in the terminal
-
-                console.log('rota post')
-                var matches = base64Qr.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/),
-                    response = {};
-
-                if (matches.length !== 3) {
-                    return new Error('Invalid input string');
-                }
-                response.type = matches[1];
-                response.data = new Buffer.from(matches[2], 'base64');
-
-                var imageBuffer = response;
-
-                res.send(`
-                    <html>
-                    <head>
-                        <title>QR Code</title>
-                    </head>
-                    <body>
-                        <img src="${base64Qr}" alt="QR Code">
-                    </body>
-                    </html>`
-                );
-
-            },
-            (statusSession, session) => {
-                console.log('Status Session: ', statusSession); //return isLogged || notLogged || browserClose || qrReadSuccess || qrReadFail || autocloseCalled || desconnectedMobile || deleteToken || chatsAvailable || deviceNotConnected || serverWssNotConnected || noOpenBrowser || initBrowser || openBrowser || connectBrowserWs || initWhatsapp || erroPageWhatsapp || successPageWhatsapp || waitForLogin || waitChat || successChat
-                //Create session wss return "serverClose" case server for close
-                console.log('Session name: ', session);
-
-            },
-            {
-                logQR: false,
-                browserArgs: chromiumArgs,
-            }
-        )
-        .then((client) => {
-            start(client);
-        })
-        .catch((erro) => {
-            console.log(erro);
-        });
-});
-
 app.get('/teste', (req, res) => {
     console.log('escutado');
 
     return res.send('Ok!');
 })
 
-io.on('connection', (socketClient) => {
+io.on('connection', async (socketClient) => {
     console.log('Cliente conectado');
 
     socket = socketClient;
@@ -132,15 +107,15 @@ io.on('connection', (socketClient) => {
         console.log('Cliente desconectado');
     });
 
-    if (!tokenExist()){
+    if (!tokenExist()) {
         socket.emit('statusClient', 'DISCONNECT');
     }
 
     socket.on('qrcode', async () => {
         console.log('Socket on qrcode');
 
-        if(tokenExist()){
-            if(client){
+        if (tokenExist()) {
+            if (client) {
 
                 client.close()
 
@@ -149,7 +124,7 @@ io.on('connection', (socketClient) => {
                     browser.close();
                 }
             }
-            
+
         }
 
 
@@ -193,26 +168,26 @@ io.on('connection', (socketClient) => {
 
     socket.on('getStatusClient', async () => {
 
-        if(client != undefined){
+        if (client != undefined) {
             const status = await client.getConnectionState();
 
             socket.emit('statusClient', status);
         }
     });
 
-    if(client != undefined){
+    if (client != undefined) {
 
         client.onStateChange((state) => {
             console.log('State changed: ', state);
-    
+
             socket.emit('statusClient', state);
-    
+
         });
     }
 
     socket.on('logout', async () => {
 
-        if(client){
+        if (client) {
 
             if (client instanceof venom.Whatsapp) {
                 let browser = client.page.browser();
@@ -393,7 +368,7 @@ async function start(clientService) {
     client.onStateChange((state) => {
         console.log('State changed: ', state);
 
-        if(socket != null) socket.emit('statusClient', state);
+        if (socket != null) socket.emit('statusClient', state);
 
     });
 
@@ -405,7 +380,7 @@ async function start(clientService) {
 
     socket.on('logout', async () => {
 
-        if(client){
+        if (client) {
             // const res_logout = await client.logout();
             // console.log(res_logout);
         }
@@ -484,7 +459,7 @@ async function deleteTokenResultados() {
 
     try {
         const stats = await fs.stat(pastaASerVerificada);
-        
+
         if (stats.isDirectory()) {
             // Verifique se o diretório existe
 
@@ -502,7 +477,7 @@ async function deleteTokenResultados() {
             // }
 
             // Agora, exclua o diretório
-            await fs.rmdir(pastaASerVerificada, { recursive: true , force: true});
+            await fs.rmdir(pastaASerVerificada, { recursive: true, force: true });
             console.log('Pasta sessionBotResultados foi excluída.');
         } else {
             console.log('O caminho não é um diretório.');
