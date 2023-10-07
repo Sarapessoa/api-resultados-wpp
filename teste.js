@@ -1,10 +1,13 @@
+const express = require('express');
 const WebSocket = require('ws');
 const http = require('http');
 
-// Crie um servidor HTTP
-const server = http.createServer((req, res) => {
-  res.writeHead(200, { 'Content-Type': 'text/plain' });
-  res.end('Servidor WebSocket em execução');
+const app = express();
+const server = http.createServer(app);
+
+// Configurar uma rota para sua API
+app.get('/api', (req, res) => {
+  res.json({ message: 'Esta é a sua API' });
 });
 
 // Crie um servidor WebSocket associado ao servidor HTTP
@@ -23,7 +26,7 @@ wss.on('connection', (ws) => {
   });
 });
 
-const port = 3000
+const port = 3000;
 
 // Inicie o servidor HTTP
 server.listen(port, () => {
