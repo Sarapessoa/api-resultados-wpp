@@ -10,16 +10,14 @@ dotenv.config();
 
 const app = express();
 app.use(cors());
-app.use(express.urlencoded({extended: false}));
 app.use(express.json());
-const server = http.createServer(app).setTimeout(300000);
-
-const io = require('socket.io')(server, { cors: { origin: '*' }});
+app.use(express.urlencoded({extended: false}));
+// const server = http.createServer(app).setTimeout(300000);
 
 // Inicie o servidor na porta de sua escolha
 const port = 3000;
 
-server.listen(port, () => {
+const server = app.listen(port, () => {
     console.log(`Servidor socket novo em execução na porta ${port}`);
 
     if(tokenExist()){
@@ -46,6 +44,8 @@ server.listen(port, () => {
             });
     }
 });
+
+const io = require('socket.io')(server, { cors: { origin: '*' }});
 
 
 let socket;
