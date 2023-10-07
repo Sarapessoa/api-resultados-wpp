@@ -15,7 +15,7 @@ app.use(express.urlencoded({extended: false}));
 // const server = http.createServer(app).setTimeout(300000);
 
 // Inicie o servidor na porta de sua escolha
-const port = 443;
+const port = 3000;
 
 const server = app.listen(port, () => {
     console.log(`Servidor socket novo em execução na porta ${port}`);
