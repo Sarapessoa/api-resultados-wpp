@@ -85,6 +85,12 @@ app.get('/qrcode', (req, res) => {
         });
 });
 
+app.get('/teste', (req, res) => {
+    console.log('escutado');
+
+    return res.send('Ok!');
+})
+
 io.on('connection', (socketClient) => {
     console.log('Cliente conectado');
 
