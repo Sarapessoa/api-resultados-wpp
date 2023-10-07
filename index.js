@@ -9,7 +9,7 @@ dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
-const io = require('socket.io')(server, { cors: {}});
+const io = require('socket.io')(server, { cors: { origin: '*' }});
 
 app.use(express.json({ extended: true, limit: '10mb', timeout: 120000 })); // 120 segundos (2 minutos)
 
