@@ -11,9 +11,41 @@ dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.urlencoded({extended: false}));
-app.use(express.json()); // 120 segundos (2 minutos)
-const server = http.createServer(app);
+app.use(express.json());
+const server = http.createServer(app).setTimeout(300000);
+
 const io = require('socket.io')(server, { cors: { origin: '*' }});
+
+// Inicie o servidor na porta de sua escolha
+const port = 3000;
+
+server.listen(port, () => {
+    console.log(`Servidor socket novo em execução na porta ${port}`);
+
+    if(tokenExist()){
+        console.log('existe');
+        // deleteTokenResultados();
+    }
+    else{
+        console.log('nao existe');
+        if(socket != undefined){
+            socket.emit('statusClient', 'DISCONNECT');
+        }
+    }
+
+    if (tokenExist()) {
+        venom
+            .create({
+                session: 'sessionBotResultados', //name of session
+                headless: 'old',
+                browserArgs: chromiumArgs,
+            })
+            .then((client) => start(client))
+            .catch((erro) => {
+                console.log(erro);
+            });
+    }
+});
 
 
 let socket;
@@ -444,37 +476,6 @@ function rewriteCode(code) {
         });
     });
 }
-
-// Inicie o servidor na porta de sua escolha
-const port = 3000;
-
-server.listen(port, () => {
-    console.log(`Servidor socket novo em execução na porta ${port}`);
-
-    if(tokenExist()){
-        console.log('existe');
-        // deleteTokenResultados();
-    }
-    else{
-        console.log('nao existe');
-        if(socket != undefined){
-            socket.emit('statusClient', 'DISCONNECT');
-        }
-    }
-
-    if (tokenExist()) {
-        venom
-            .create({
-                session: 'sessionBotResultados', //name of session
-                headless: 'old',
-                browserArgs: chromiumArgs,
-            })
-            .then((client) => start(client))
-            .catch((erro) => {
-                console.log(erro);
-            });
-    }
-});
 
 async function deleteTokenResultados() {
     const fs = require('fs').promises;
