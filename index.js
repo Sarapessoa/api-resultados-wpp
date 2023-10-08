@@ -3,8 +3,10 @@ const dotenv = require('dotenv');
 const path = require('path');
 const venom = require('venom-bot');
 const http = require('http');
-const socketIo = require('socket.io');
+const WebSocket = require('ws');
 const cors = require('cors');
+const fs = require("fs");
+const os = require("os");
 
 dotenv.config();
 
@@ -13,21 +15,24 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+const server = http.createServer(app);
+
+let ws;
+let client;
+
+const clients = new Set();
+
 // Inicie o servidor na porta de sua escolha
 const port = 3000;
 
-const server = http.createServer(app).listen(port, (req, res) => {
-    console.log(`Servidor socket novo em execução na porta ${port}`);
+server.listen(port, () => {
+    console.log(`Servidor HTTP em execução na porta ${port}`);
 
     if (tokenExist()) {
         console.log('existe');
-        // deleteTokenResultados();
     }
     else {
         console.log('nao existe');
-        if (socket != undefined) {
-            socket.emit('statusClient', 'DISCONNECT');
-        }
     }
 
     if (tokenExist()) {
@@ -42,12 +47,10 @@ const server = http.createServer(app).listen(port, (req, res) => {
                 console.log(erro);
             });
     }
-})
-const io = socketIo(server)
+});
 
 
-let socket;
-let client;
+const wss = new WebSocket.Server({ server });
 
 const chromiumArgs = [
     '--disable-web-security', '--no-sandbox', '--disable-web-security',
@@ -65,80 +68,119 @@ app.get('/teste', (req, res) => {
     return res.send('Ok!');
 })
 
-io.on('connection', async (socketClient) => {
-    console.log('Cliente conectado');
+function emitToAllClients(eventName, eventData) {
+    const eventMessage = JSON.stringify({ type: eventName, data: eventData });
 
-    socket = socketClient;
+    for (const client of clients) {
+        client.send(eventMessage);
+    }
+}
 
-    socket.on('disconnect', () => {
+wss.on('connection', async (wsReceive) => {
+    console.log('Conexão WebSocket estabelecida');
+
+    ws = wsReceive;
+
+    clients.add(ws);
+
+
+    ws.on('close', () => {
         console.log('Cliente desconectado');
     });
 
     if (!tokenExist()) {
-        socket.emit('statusClient', 'DISCONNECT');
+        emitToAllClients('StatusClient', 'DISCONNECT');
+    }
+    else {
+        if (client != undefined) {
+            const status = await client.getConnectionState();
+
+            emitToAllClients('StatusClient', status);
+        }
     }
 
-    socket.on('qrcode', async () => {
-        console.log('Socket on qrcode');
+    ws.on('message', async (message) => {
+        console.log(`Mensagem recebida: ${message}`);
 
-        if (tokenExist()) {
+        const type = JSON.parse(message).type;
+        const data = JSON.parse(message).data;
+
+        console.log(type)
+        console.log(data)
+
+        if (type == 'qrcode') {
+            console.log('on qrcode');
+
+            if (tokenExist()) {
+                if (client) {
+
+                    client.close()
+
+                    if (client instanceof venom.Whatsapp) {
+                        let browser = client.page.browser();
+                        browser.close();
+                    }
+                    deleteTokenResultados();
+                    setEnvValue('IDS_DESTINOS', '');
+                }
+
+            }
+
+
+            venom
+                .create(
+                    'sessionBotResultados',
+                    (base64Qr, asciiQR, attempts, urlCode) => {
+                        console.log(asciiQR); // Optional to log the QR in the terminal
+
+                        var matches = base64Qr.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/),
+                            response = {};
+
+                        if (matches.length !== 3) {
+                            return new Error('Invalid input string');
+                        }
+                        response.type = matches[1];
+                        response.data = new Buffer.from(matches[2], 'base64');
+
+                        emitToAllClients('QrCodeBase64', base64Qr);
+
+                    },
+                    (statusSession, session) => {
+                        emitToAllClients('StatusQrCodeBase64', statusSession);
+                        console.log('Status Session: ', statusSession); //return isLogged || notLogged || browserClose || qrReadSuccess || qrReadFail || autocloseCalled || desconnectedMobile || deleteToken || chatsAvailable || deviceNotConnected || serverWssNotConnected || noOpenBrowser || initBrowser || openBrowser || connectBrowserWs || initWhatsapp || erroPageWhatsapp || successPageWhatsapp || waitForLogin || waitChat || successChat
+                        //Create session wss return "serverClose" case server for close
+                        console.log('Session name: ', session);
+
+                    },
+                    {
+                        logQR: false,
+                        browserArgs: chromiumArgs
+                    }
+                )
+                .then((client) => {
+                    start(client);
+                })
+                .catch((erro) => {
+                    console.log(erro);
+                });
+        }
+
+        if (type == 'getStatusClient') {
+            if (client != undefined) {
+                const status = await client.getConnectionState();
+
+                emitToAllClients('StatusClient', status);
+            }
+        }
+
+        if (type == 'logout') {
             if (client) {
-
-                client.close()
 
                 if (client instanceof venom.Whatsapp) {
                     let browser = client.page.browser();
                     browser.close();
                 }
             }
-
-        }
-
-
-        venom
-            .create(
-                'sessionBotResultados',
-                (base64Qr, asciiQR, attempts, urlCode) => {
-                    console.log(asciiQR); // Optional to log the QR in the terminal
-
-                    var matches = base64Qr.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/),
-                        response = {};
-
-                    if (matches.length !== 3) {
-                        return new Error('Invalid input string');
-                    }
-                    response.type = matches[1];
-                    response.data = new Buffer.from(matches[2], 'base64');
-
-                    socket.emit('qrCodeBase64', base64Qr);
-
-                },
-                (statusSession, session) => {
-                    socket.emit('StatusQrCodeBase64', statusSession);
-                    console.log('Status Session: ', statusSession); //return isLogged || notLogged || browserClose || qrReadSuccess || qrReadFail || autocloseCalled || desconnectedMobile || deleteToken || chatsAvailable || deviceNotConnected || serverWssNotConnected || noOpenBrowser || initBrowser || openBrowser || connectBrowserWs || initWhatsapp || erroPageWhatsapp || successPageWhatsapp || waitForLogin || waitChat || successChat
-                    //Create session wss return "serverClose" case server for close
-                    console.log('Session name: ', session);
-
-                },
-                {
-                    logQR: false,
-                    browserArgs: chromiumArgs
-                }
-            )
-            .then((client) => {
-                start(client);
-            })
-            .catch((erro) => {
-                console.log(erro);
-            });
-    });
-
-    socket.on('getStatusClient', async () => {
-
-        if (client != undefined) {
-            const status = await client.getConnectionState();
-
-            socket.emit('statusClient', status);
         }
     });
 
@@ -147,22 +189,10 @@ io.on('connection', async (socketClient) => {
         client.onStateChange((state) => {
             console.log('State changed: ', state);
 
-            socket.emit('statusClient', state);
+            emitToAllClients('StatusClient', state);
 
         });
     }
-
-    socket.on('logout', async () => {
-
-        if (client) {
-
-            if (client instanceof venom.Whatsapp) {
-                let browser = client.page.browser();
-                browser.close();
-            }
-        }
-    })
-
 });
 
 
@@ -178,17 +208,14 @@ async function start(clientService) {
 
         console.log(msg);
 
-        const aviso = 'Vem conferir seu prêmio 💰🤑\nEntre em contato com a nossa *central de atendimento* 👇🏻';
+        const stringDestinos = process.env.IDS_DESTINOS;
+        const arrayDestinos = stringDestinos.split(',');
 
         try {
-            const result = await client.sendText(process.env.CODE_GROUP, msg);
-            console.log('Result: ', result); // return object success
-
-            const resultAviso = await client.sendText(process.env.CODE_GROUP, aviso);
-            console.log('Result: ', resultAviso); // return object success
-
-            const resultContact = await client.sendContactVcard(process.env.CODE_GROUP, '5511961799124@c.us', 'Central - Aladin Loterias');
-            console.log('Result: ', resultContact); // return object success
+            for (const destino of arrayDestinos) {
+                const result = await client.sendText(destino, msg);
+                console.log('Result: ', result);
+            }
 
         } catch (erro) {
             console.error('Error when sending: ', erro); // return object error
@@ -197,6 +224,122 @@ async function start(clientService) {
 
         // Envie a resposta aqui, fora do bloco try-catch
         return res.send('Mensagem enviada com sucesso!');
+    });
+
+    app.post('/send/resultados', async (req, res) => {
+        const msg = req.body.data;
+
+        console.log(msg);
+
+        const stringDestinos = process.env.IDS_DESTINOS;
+        const arrayDestinos = stringDestinos.split(',');
+
+        try {
+            
+            const aviso = await getTextForResultados();
+            for (const destino of arrayDestinos) {
+                const result = await client.sendText(destino, msg);
+                console.log('Result: ', result);
+
+                const resultAviso = await client.sendText(destino, aviso);
+                console.log('Result: ', resultAviso); // return object success
+
+                const resultContact = await client.sendContactVcard(destino, '5511961799124@c.us', 'Central - Aladin Loterias');
+                console.log('Result: ', resultContact);
+            }
+
+        } catch (erro) {
+            console.error('Error when sending: ', erro); // return object error
+            return res.send('Erro para enviar a mensagem!');
+        }
+
+        // Envie a resposta aqui, fora do bloco try-catch
+        return res.send('Mensagem enviada com sucesso!');
+    });
+
+    //Destinos
+
+    app.post('/recipients', async (req, res) => {
+        const destinos = req.body.destinos;
+
+        try {
+
+            stringNewDestinos = destinos.join(',');
+
+            setEnvValue("IDS_DESTINOS", stringNewDestinos);
+
+
+        } catch (erro) {
+            console.error('Error when sending: ', erro); // return object error
+            return res.send('Erro para modificar destinatários!');
+        }
+
+        // Envie a resposta aqui, fora do bloco try-catch
+        return res.send('Destinatários atualizados com sucesso!');
+    });
+
+    app.get('/recipients', async (req, res) => {
+
+
+        try {
+
+            const stringDestinos = process.env.IDS_DESTINOS;
+            const arrayDestinos = stringDestinos.split(',');
+
+            return res.json(arrayDestinos);
+
+        } catch (erro) {
+            console.error('Error when sending: ', erro); // return object error
+            return res.send('Erro para acessar destinatários!');
+        }
+    });
+
+    //Aviso que está na mensagem de resultados
+
+    app.get('/aviso', async (req, res) => {
+
+
+        try {
+
+            const aviso = await getTextForResultados();
+
+            return res.json({msg: aviso});
+
+        } catch (erro) {
+            console.error('Error when sending: ', erro); // return object error
+            return res.send('Erro para acessar a mensagem de aviso!');
+        }
+    });
+
+    app.post('/aviso', async (req, res) => {
+        const newAviso = req.body.msg;
+
+        try {
+            const result = await setTextForResultados(newAviso);
+
+        } catch (erro) {
+            console.error('Error when sending: ', erro); // return object error
+            return res.send('Erro para acessar a mensagem de aviso!');
+        }
+
+        return res.send('Mensagem de aviso alterada com successo!')
+    });
+
+    //Infos do número conectado
+
+    app.get('/infos', async (req, res) => {
+
+
+        try {
+
+            const result = await client.getHostDevice();
+
+            return res.json(result);
+
+        } catch (erro) {
+            console.error('Error when sending: ', erro); // return object error
+            return res.send('Erro para acessar as informações!');
+        }
     });
 
     app.get('/contacts', async (req, res) => {
@@ -335,23 +478,9 @@ async function start(clientService) {
     client.onStateChange((state) => {
         console.log('State changed: ', state);
 
-        if (socket != null) socket.emit('statusClient', state);
+        if (ws != null) emitToAllClients('StatusClient', state);
 
     });
-
-    socket.on('getStatusClient', async () => {
-        const status = await client.getConnectionState();
-
-        socket.emit('statusClient', status);
-    });
-
-    socket.on('logout', async () => {
-
-        if (client) {
-            // const res_logout = await client.logout();
-            // console.log(res_logout);
-        }
-    })
 
 }
 
@@ -377,7 +506,7 @@ app.get('/start', (req, res) => {
 function rewriteCode(code) {
     const fs = require('fs');
 
-    const targetVariableName = 'CODE_GROUP';
+    const targetVariableName = 'IDS_DESTINOS';
 
     // Novo valor para a variável
     const newValue = code;
@@ -419,6 +548,24 @@ function rewriteCode(code) {
     });
 }
 
+function setEnvValue(key, value) {
+
+    // read file from hdd & split if from a linebreak to a array
+    const ENV_VARS = fs.readFileSync("./.env", "utf8").split(os.EOL);
+
+    // find the env we want based on the key
+    const target = ENV_VARS.indexOf(ENV_VARS.find((line) => {
+        return line.match(new RegExp(key));
+    }));
+
+    // replace the key/value with the new value
+    ENV_VARS.splice(target, 1, `${key}=${value}`);
+
+    // write everything back to the file system
+    fs.writeFileSync("./.env", ENV_VARS.join(os.EOL));
+
+}
+
 async function deleteTokenResultados() {
     const fs = require('fs').promises;
 
@@ -428,20 +575,6 @@ async function deleteTokenResultados() {
         const stats = await fs.stat(pastaASerVerificada);
 
         if (stats.isDirectory()) {
-            // Verifique se o diretório existe
-
-            // Lista de arquivos a serem excluídos (adicione os arquivos que deseja excluir)
-            // const arquivosAExcluir = ['chrome_debug.log'];
-
-            // for (const arquivo of arquivosAExcluir) {
-            //     const arquivoPath = `${pastaASerVerificada}/${arquivo}`;
-            //     try {
-            //         await fs.unlink(arquivoPath);
-            //         console.log(`Arquivo ${arquivo} excluído.`);
-            //     } catch (err) {
-            //         console.error(`Erro ao excluir ${arquivo}:`, err);
-            //     }
-            // }
 
             // Agora, exclua o diretório
             await fs.rmdir(pastaASerVerificada, { recursive: true, force: true });
@@ -458,12 +591,41 @@ async function deleteTokenResultados() {
     }
 }
 
+async function getTextForResultados() {
+    const caminhoDoArquivo = 'msg_resultados.txt';
+    const fs = require('fs').promises;
 
+    try {
+        const dados = await fs.readFile(caminhoDoArquivo, 'utf8');
+
+        // Substitua as quebras de linha pelo caractere '\n'
+        const conteudoFormatado = dados.replace(/\r\n/g, '\n');
+
+        return conteudoFormatado;
+    } catch (erro) {
+        throw erro;
+    }
+}
+
+async function setTextForResultados(conteudo) {
+    const caminhoDoArquivo = 'msg_resultados.txt';
+    const fs = require('fs').promises;
+
+    try {
+        const conteudoFormatado = conteudo.replace(/\n/g, '\r\n');
+    
+        await fs.writeFile(caminhoDoArquivo, conteudoFormatado, 'utf8');
+
+        return true;
+    } catch (erro) {
+        throw erro;
+    }
+}
 
 function tokenExist() {
     const fs = require('fs');
 
-    const pastaASerVerificada = 'tokens/sessionBotResultados';
+    const pastaASerVerificada = 'tokens';
 
     try {
         // Tenta verificar a existência da pasta
