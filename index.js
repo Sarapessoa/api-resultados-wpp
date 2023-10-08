@@ -282,7 +282,7 @@ async function start(clientService) {
 
 
         try {
-
+            console.log(process.env.IDS_DESTINOS);
             const stringDestinos = process.env.IDS_DESTINOS;
             const arrayDestinos = stringDestinos.split(',');
 
