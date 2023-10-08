@@ -121,7 +121,7 @@ wss.on('connection', async (wsReceive) => {
                         browser.close();
                     }
                     deleteTokenResultados();
-                    setEnvValue('IDS_DESTINOS', '');
+                    setDestinos([]);
                 }
 
             }
@@ -208,8 +208,7 @@ async function start(clientService) {
 
         console.log(msg);
 
-        const stringDestinos = process.env.IDS_DESTINOS;
-        const arrayDestinos = stringDestinos.split(',');
+        const arrayDestinos = await getDestinos();
 
         try {
             for (const destino of arrayDestinos) {
@@ -231,8 +230,7 @@ async function start(clientService) {
 
         console.log(msg);
 
-        const stringDestinos = process.env.IDS_DESTINOS;
-        const arrayDestinos = stringDestinos.split(',');
+        const arrayDestinos = await getDestinos();
 
         try {
             
@@ -264,9 +262,7 @@ async function start(clientService) {
 
         try {
 
-            stringNewDestinos = destinos.join(',');
-
-            setEnvValue("IDS_DESTINOS", stringNewDestinos);
+            await setDestinos(destinos);
 
 
         } catch (erro) {
@@ -282,11 +278,10 @@ async function start(clientService) {
 
 
         try {
-            console.log(process.env.IDS_DESTINOS);
-            const stringDestinos = process.env.IDS_DESTINOS;
-            const arrayDestinos = stringDestinos.split(',');
 
-            return res.json(arrayDestinos);
+            const destinos = await getDestinos();
+
+            return res.json(destinos);
 
         } catch (erro) {
             console.error('Error when sending: ', erro); // return object error
@@ -564,6 +559,33 @@ function setEnvValue(key, value) {
     // write everything back to the file system
     fs.writeFileSync(".env", ENV_VARS.join(os.EOL));
 
+}
+
+async function getDestinos(){
+    const fs = require('fs').promises;
+
+    try {
+        const dados = await fs.readFile('destinos.json', 'utf8');
+        const objetoJSON = JSON.parse(dados);
+        const destinos = objetoJSON.destinos || [];
+        return destinos;
+      } catch (erro) {
+        throw erro;
+      }
+}
+
+async function setDestinos(novosDestinos){
+    const fs = require('fs').promises;
+
+    try {
+        const dados = await fs.readFile('destinos.json', 'utf8');
+        const objetoJSON = JSON.parse(dados);
+        objetoJSON.destinos = novosDestinos;
+    
+        await fs.writeFile('destinos.json', JSON.stringify(objetoJSON, null, 2), 'utf8');
+      } catch (erro) {
+        throw erro;
+      }
 }
 
 async function deleteTokenResultados() {
