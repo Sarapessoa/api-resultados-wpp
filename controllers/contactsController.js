@@ -25,7 +25,7 @@ const getContact = async (req, res) => {
 
         const numberToFind = req.params.number;
 
-        const foundContact = result.find((contact) => contact.id.user === numberToFind);
+        const foundContact = result.find((contact) => contact.id.user == numberToFind);
 
         if (foundContact) {
             return res.json(foundContact);
@@ -40,4 +40,22 @@ const getContact = async (req, res) => {
 
 };
 
-module.exports = { getContacts, getContact }
+const checkContact = async (req, res) => {
+
+    const client = getClienteVenom();
+
+    try {
+        const number = (req.params.number) + '@c.us';
+
+        const result = await client.checkNumberStatus(number);
+
+        return res.json(result);
+
+    } catch (erro) {
+        console.error('Error when sending: ', erro); // return object error
+        return res.status(500).send('Erro ao retornar o status do contato!');
+    }
+
+};
+
+module.exports = { getContacts, getContact, checkContact }

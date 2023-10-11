@@ -81,6 +81,10 @@ function startClient(clientSession){
     client.onMessage(async (message) => {
         console.log(message);
     });
+
+    client.onAddedToGroup(chatEvent => {
+        console.log(chatEvent);
+    });
 }
 
 function getClienteVenom(){

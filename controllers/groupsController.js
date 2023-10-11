@@ -102,4 +102,23 @@ const removerMembroGrupo = async (req, res) => {
 
 };
 
-module.exports = { getGrupos, getGrupoForName, criarGrupo, colocarMembroGrupo, removerMembroGrupo }
+const getGroupInviteLink = async (req, res) => {
+    const client = getClienteVenom();
+
+    const { id } = req.params;
+
+    try {
+
+
+        const result = await client.getGroupInviteLink(id);;
+
+        return res.send(result);
+
+    } catch (erro) {
+        console.error('Error when sending: ', erro); // return object error
+        return res.status(500).send('Erro retornar o convite do grupo!');
+    }
+
+};
+
+module.exports = { getGrupos, getGrupoForName, criarGrupo, colocarMembroGrupo, removerMembroGrupo, getGroupInviteLink }

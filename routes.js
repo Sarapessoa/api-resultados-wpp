@@ -2,8 +2,8 @@ const { sendMessage, sendResultadosMesasge} = require('./controllers/sendMessage
 const { setRecipients, getRecipients } = require('./controllers/recipientsController');
 const { getAviso, setAviso } = require('./controllers/avisoController');
 const { getInfos } = require('./controllers/infosController');
-const { getContacts, getContact } = require('./controllers/contactsController');
-const { getGrupos, getGrupoForName, criarGrupo, colocarMembroGrupo, removerMembroGrupo } = require('./controllers/groupsController');
+const { getContacts, getContact, checkContact } = require('./controllers/contactsController');
+const { getGrupos, getGrupoForName, criarGrupo, colocarMembroGrupo, removerMembroGrupo, getGroupInviteLink } = require('./controllers/groupsController');
 const express = require('express');
 
 const router = express.Router();
@@ -26,6 +26,7 @@ router.get('/infos', getInfos);
 // Contatos do número
 router.get('/contacts', getContacts);
 router.get('/contacts/:number', getContact);
+router.get('/check/:number', checkContact);
 
 // Grupos do número
 router.get('/groups', getGrupos);
@@ -33,6 +34,7 @@ router.get('/groups/:name', getGrupoForName);
 router.post('/group', criarGrupo);
 router.post('/group/:member', colocarMembroGrupo);
 router.delete('/group/:member', removerMembroGrupo);
+router.get('/group/:id/convite', getGroupInviteLink);
 
 
 module.exports = router;
