@@ -27,7 +27,7 @@ const getGrupoForName = async (req, res) => {
         const groupToFind = req.params.name; // Obtém o número fornecido na URL
 
         // Procura o objeto com base na propriedade 'name'
-        const foundGroup = result.find((chat) => chat.name === groupToFind);
+        const foundGroup = result.find((chat) => chat.contact.name == groupToFind);
 
         if (foundGroup) {
             return res.json(foundGroup);
