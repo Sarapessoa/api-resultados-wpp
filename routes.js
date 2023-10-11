@@ -31,7 +31,7 @@ router.get('/contacts/:number', getContact);
 router.get('/groups', getGrupos);
 router.get('/groups/:name', getGrupoForName);
 router.post('/group', criarGrupo);
-router.post('group/:member', colocarMembroGrupo);
+router.post('/group/:member', colocarMembroGrupo);
 router.delete('/group/:member', removerMembroGrupo);
 
 

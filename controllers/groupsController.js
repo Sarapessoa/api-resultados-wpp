@@ -70,7 +70,6 @@ const colocarMembroGrupo = async (req, res) => {
 
         const number = number_member + '@c.us';
 
-
         const result = await client.addParticipant(id_group, number);
 
         return res.send(result);
