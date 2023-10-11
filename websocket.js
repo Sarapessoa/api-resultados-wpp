@@ -60,7 +60,7 @@ function listenWebSocket(wss){
                 }
     
     
-                createNewSession();
+                createNewSession(emitToAllClients);
                 client = getClienteVenom();
             }
     
@@ -103,4 +103,8 @@ function emitToAllClients(eventName, eventData) {
     }
 }
 
-module.exports = { listenWebSocket, emitToAllClients }
+function teste(){
+    console.log('teste')
+}
+
+module.exports = { listenWebSocket, emitToAllClients, teste }

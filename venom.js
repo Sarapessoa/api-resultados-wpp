@@ -1,7 +1,6 @@
 const venom = require('venom-bot');
 const { chromiumArgs } = require('./config');
 const { setDestinos, deleteTokenResultados } = require('./utils');
-const { emitToAllClients } = require('./websocket');
 
 let venomClient;
 let process;
@@ -27,7 +26,7 @@ function createOldSession() {
         {
             headless: 'old',
             browserArgs: chromiumArgs,
-            devtools: false
+            devtools: true
         },
         (browser, waPage) => {
             venomClient = browser;
@@ -38,7 +37,7 @@ function createOldSession() {
     });
 }
 
-function createNewSession() {
+function createNewSession(emitToAllClients) {
     venom.create(
         'sessionBotResultados',
         (base64Qr, asciiQR, attempts, urlCode) => {
