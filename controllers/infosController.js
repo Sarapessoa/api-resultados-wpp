@@ -4,6 +4,8 @@ const getInfos = async (req, res) => {
 
     const client = getClienteVenom();
 
+    if(client == undefined) return;
+
     try {
 
         const result = await client.getHostDevice();

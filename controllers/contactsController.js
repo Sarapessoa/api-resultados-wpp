@@ -4,6 +4,8 @@ const getContacts = async (req, res) => {
 
     const client = getClienteVenom();
 
+    if(client == undefined) return;
+
     try {
         const result = await client.getAllContacts();
 
@@ -19,6 +21,8 @@ const getContacts = async (req, res) => {
 const getContact = async (req, res) => {
 
     const client = getClienteVenom();
+
+    if(client == undefined) return;
 
     try {
         const result = await client.getAllContacts();

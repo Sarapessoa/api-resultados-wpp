@@ -4,6 +4,8 @@ const getGrupos = async (req, res) => {
 
     const client = getClienteVenom();
 
+    if(client == undefined) return;
+
     try {
         const result = await client.getAllChatsGroups();
 
@@ -19,6 +21,8 @@ const getGrupos = async (req, res) => {
 const getGrupoForName = async (req, res) => {
 
     const client = getClienteVenom();
+
+    if(client == undefined) return;
 
 
     try {

@@ -6,6 +6,8 @@ const sendMessage = async (req, res) => {
     const arrayDestinos = await getDestinos();
     const client = getClienteVenom();
 
+    if(client == undefined) return;
+
     try {
         for (const destino of arrayDestinos) {
             const result = await client.sendText(destino, msg);
@@ -23,6 +25,8 @@ const sendResultadosMesasge = async (req, res) => {
 
     const arrayDestinos = await getDestinos();
     const client = getClienteVenom();
+
+    if(client == undefined) return;
 
     try {
         
