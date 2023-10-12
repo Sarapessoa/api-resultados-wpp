@@ -1,7 +1,7 @@
 const { sendMessage, sendResultadosMesasge} = require('./controllers/sendMessageController');
 const { setRecipients, getRecipients } = require('./controllers/recipientsController');
 const { getAviso, setAviso } = require('./controllers/avisoController');
-const { getInfos } = require('./controllers/infosController');
+const { getInfos, getStatusClient } = require('./controllers/infosController');
 const { getContacts, getContact, checkContact } = require('./controllers/contactsController');
 const { getGrupos, getGrupoForName, criarGrupo, colocarMembroGrupo, removerMembroGrupo, getGroupInviteLink } = require('./controllers/groupsController');
 const express = require('express');
@@ -22,6 +22,7 @@ router.get('/aviso', getAviso);
 
 // Informações do telefone conectado
 router.get('/infos', getInfos);
+router.get('/client', getStatusClient);
 
 // Contatos do número
 router.get('/contacts', getContacts);
