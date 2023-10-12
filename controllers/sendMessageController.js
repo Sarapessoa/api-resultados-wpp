@@ -2,16 +2,18 @@ const { getDestinos, getTextForResultados } = require('../utils');
 const { getClienteVenom } = require('../venom');
 
 const sendMessage = async (req, res) => {
-    const msg = req.body.data;
-    const arrayDestinos = await getDestinos();
+    const { msg, destinos } = req.body;
     const client = getClienteVenom();
 
     if(client == undefined) return;
 
     try {
-        for (const destino of arrayDestinos) {
+        for (const destino of destinos) {
+            await client.setChatState(destino, 0);
             const result = await client.sendText(destino, msg);
+            await client.setChatState(destino, 2);
             console.log('Result: ', result);
+            await delay(1000);
         }
         return res.send('Mensagem enviada com sucesso!');
     } catch (error) {
@@ -32,6 +34,8 @@ const sendResultadosMesasge = async (req, res) => {
         
         const aviso = await getTextForResultados();
         for (const destino of arrayDestinos) {
+            await client.setChatState(destino, 0);
+
             const result = await client.sendText(destino, msg);
             console.log('Result: ', result);
 
@@ -39,6 +43,7 @@ const sendResultadosMesasge = async (req, res) => {
             console.log('Result: ', resultAviso); // return object success
 
             const resultContact = await client.sendContactVcard(destino, '5511961799124@c.us', 'Central - Aladin Loterias');
+            await client.setChatState(destino, 2);
             console.log('Result: ', resultContact);
         }
 
@@ -50,5 +55,9 @@ const sendResultadosMesasge = async (req, res) => {
     // Envie a resposta aqui, fora do bloco try-catch
     return res.send('Mensagem enviada com sucesso!');
 };
+
+async function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 module.exports = { sendMessage, sendResultadosMesasge };

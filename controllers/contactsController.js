@@ -48,6 +48,8 @@ const checkContact = async (req, res) => {
 
     const client = getClienteVenom();
 
+    if (client == undefined) return;
+
     try {
         const number = (req.params.number) + '@c.us';
 
