@@ -1,4 +1,4 @@
-const { sendMessage, sendResultadosMesasge} = require('./controllers/sendMessageController');
+const { sendMessage, sendResultadosMesasge } = require('./controllers/sendMessageController');
 const { setRecipients, getRecipients } = require('./controllers/recipientsController');
 const { getAviso, setAviso } = require('./controllers/avisoController');
 const { getInfos, getStatusClient } = require('./controllers/infosController');

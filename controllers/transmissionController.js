@@ -2,9 +2,11 @@ const { getClienteVenom } = require('../venom');
 
 const getTransmissions = async (req, res) => {
 
-    const client = getClienteVenom();
+    const { session } = req.headers;
 
-    if(client == undefined) return;
+    const client = getClienteVenom(session);
+
+    if(client == undefined) return res.status(404).send('Sessão não encontrada');
 
     try {
         const result = await client.getAllChatsTransmission();

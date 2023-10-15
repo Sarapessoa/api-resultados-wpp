@@ -5,7 +5,7 @@ const WebSocket = require('ws');
 const cors = require('cors');
 
 const { listenWebSocket } = require('./websocket');
-const { tokenExist } = require('./utils');
+const { allTokensExist } = require('./utils');
 const { createOldSession } = require('./venom');
 const routes = require('./routes');
 
@@ -25,13 +25,24 @@ listenWebSocket(wss);
 app.use('/', routes);
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
+
+    const sessionsNow = allTokensExist();
+
     
-    if(tokenExist()){
-        console.log('token existe!');
-        createOldSession();
+    if(sessionsNow.length == 0){
+        console.log('Nenhum token existente');
     }
-    else{
-        console.log('token não existe');
+
+    for(const session of sessionsNow){
+        console.log('token existe para: ', session);
+
+        try {
+           const res = await createOldSession(session);
+        } catch (error) {
+            console.error('Erro durante a criação da sessão:', error);
+        }
+
     }
+    
 });

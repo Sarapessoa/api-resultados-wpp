@@ -2,9 +2,11 @@ const { getClienteVenom } = require('../venom');
 
 const getGrupos = async (req, res) => {
 
-    const client = getClienteVenom();
+    const { session } = req.headers;
 
-    if(client == undefined) return;
+    const client = getClienteVenom(session);
+
+    if(client == undefined) return res.status(404).send('Sessão não encontrada');
 
     try {
         const result = await client.getAllChatsGroups();
@@ -20,9 +22,11 @@ const getGrupos = async (req, res) => {
 
 const getGrupoForName = async (req, res) => {
 
-    const client = getClienteVenom();
+    const { session } = req.headers;
 
-    if(client == undefined) return;
+    const client = getClienteVenom(session);
+
+    if(client == undefined) return res.status(404).send('Sessão não encontrada');
 
 
     try {
@@ -47,9 +51,11 @@ const getGrupoForName = async (req, res) => {
 };
 
 const criarGrupo = async (req, res) => {
-    const client = getClienteVenom();
+    const { session } = req.headers;
 
-    if (client == undefined) return;
+    const client = getClienteVenom(session);
+
+    if(client == undefined) return res.status(404).send('Sessão não encontrada');
 
     const { name, members } = req.body;
 
@@ -68,9 +74,11 @@ const criarGrupo = async (req, res) => {
 };
 
 const colocarMembroGrupo = async (req, res) => {
-    const client = getClienteVenom();
+    const { session } = req.headers;
 
-    if (client == undefined) return;
+    const client = getClienteVenom(session);
+
+    if(client == undefined) return res.status(404).send('Sessão não encontrada');
 
     const { id_group, number_member } = req.body;
 
@@ -90,9 +98,11 @@ const colocarMembroGrupo = async (req, res) => {
 };
 
 const removerMembroGrupo = async (req, res) => {
-    const client = getClienteVenom();
+    const { session } = req.headers;
 
-    if (client == undefined) return;
+    const client = getClienteVenom(session);
+
+    if(client == undefined) return res.status(404).send('Sessão não encontrada');
 
     const { id_group, number_member } = req.body;
 
@@ -113,9 +123,11 @@ const removerMembroGrupo = async (req, res) => {
 };
 
 const colocarMembrosGrupo = async (req, res) => {
-    const client = getClienteVenom();
+    const { session } = req.headers;
 
-    if (client == undefined) return;
+    const client = getClienteVenom(session);
+
+    if(client == undefined) return res.status(404).send('Sessão não encontrada');
 
     const { id_group, array_members } = req.body;
 
@@ -139,7 +151,11 @@ const colocarMembrosGrupo = async (req, res) => {
 };
 
 const getGroupInviteLink = async (req, res) => {
-    const client = getClienteVenom();
+    const { session } = req.headers;
+
+    const client = getClienteVenom(session);
+
+    if(client == undefined) return res.status(404).send('Sessão não encontrada');
 
     const { id } = req.params;
 

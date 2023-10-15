@@ -2,9 +2,11 @@ const { getClienteVenom } = require('../venom');
 
 const getInfos = async (req, res) => {
 
-    const client = getClienteVenom();
+    const { session } = req.headers;
 
-    if(client == undefined) return;
+    const client = getClienteVenom(session);
+
+    if(client == undefined) return res.status(404).send('Sessão não encontrada');
 
     try {
 
@@ -21,9 +23,10 @@ const getInfos = async (req, res) => {
 const getStatusClient = async (req, res) => {
 
     try {
+        const { session } = req.headers;
 
-        
-        const client = getClienteVenom();
+        const client = getClienteVenom(session);
+    
         let status = '';
 
         if (client == undefined) status = 'Disconnected'

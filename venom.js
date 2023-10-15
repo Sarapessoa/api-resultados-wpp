@@ -5,41 +5,51 @@ const { setDestinos, deleteTokenResultados } = require('./utils');
 let venomClient;
 let process;
 let client;
+let sessions = {};
 
-function createOldSession() {
-    venom.create(
-        'sessionBotResultados',
-        undefined,
-        (sessionStatus, session) => {
-            if (sessionStatus === 'isLogged') {
-                console.log('A sessão está autenticada.');
-            } else if (sessionStatus === 'notLogged') {
-                if(venomClient){
-                    venomClient.close().then(() => {
-                        deleteTokenResultados();
-                    });
+function createOldSession(nameSession) {
+    return new Promise((resolve, reject) => {
+        venom.create(
+            nameSession,
+            undefined,
+            (sessionStatus, session) => {
+                if (sessionStatus === 'isLogged') {
+                    console.log('A sessão está autenticada.');
+                    resolve(session); // Resolva a Promise quando a sessão estiver autenticada
+                } else if (sessionStatus === 'notLogged') {
+                    if (venomClient) {
+                        venomClient.close().then(() => {
+                            deleteTokenResultados(nameSession);
+                        });
+                    }
+                    setDestinos(nameSession, []);
+                    console.log('A sessão não está autenticada.');
+                    reject('A sessão não está autenticada'); // Rejeite a Promise se a sessão não estiver autenticada
                 }
-                setDestinos([])
-                console.log('A sessão não está autenticada.');
+            },
+            {
+                headless: 'old',
+                browserArgs: chromiumArgs,
+                devtools: true,
+            },
+            (browser, waPage) => {
+                venomClient = browser;
+                process = browser.process();
             }
-        },
-        {
-            headless: 'old',
-            browserArgs: chromiumArgs,
-            devtools: true
-        },
-        (browser, waPage) => {
-            venomClient = browser;
-            process = browser.process();
-        }
-    ).then((client) => startClient(client) ).catch((error) => {
-        console.error('Erro ao inicializar Venom:', error);
+        )
+            .then((client) => {
+                startClient(client, nameSession);
+            })
+            .catch((error) => {
+                console.error('Erro ao inicializar Venom:', error);
+                reject(error); // Rejeite a Promise em caso de erro
+            });
     });
 }
 
-function createNewSession(emitToAllClients) {
+function createNewSession(emitToAllClientsSession, nameSession) {
     venom.create(
-        'sessionBotResultados',
+        nameSession,
         (base64Qr, asciiQR, attempts, urlCode) => {
             console.log(asciiQR); // Optional to log the QR in the terminal
 
@@ -52,11 +62,11 @@ function createNewSession(emitToAllClients) {
             response.type = matches[1];
             response.data = new Buffer.from(matches[2], 'base64');
 
-            emitToAllClients('QrCodeBase64', base64Qr);
+            emitToAllClientsSession(nameSession, 'QrCodeBase64', base64Qr);
 
         },
         (statusSession, session) => {
-            emitToAllClients('StatusQrCodeBase64', statusSession);
+            emitToAllClientsSession(nameSession, 'StatusQrCodeBase64', statusSession);
             console.log('Status Session: ', statusSession); //return isLogged || notLogged || browserClose || qrReadSuccess || qrReadFail || autocloseCalled || desconnectedMobile || deleteToken || chatsAvailable || deviceNotConnected || serverWssNotConnected || noOpenBrowser || initBrowser || openBrowser || connectBrowserWs || initWhatsapp || erroPageWhatsapp || successPageWhatsapp || waitForLogin || waitChat || successChat
             //Create session wss return "serverClose" case server for close
             console.log('Session name: ', session);
@@ -70,12 +80,13 @@ function createNewSession(emitToAllClients) {
             process = browser.process();
             venomClient = browser;
         }
-    ).then((client) => startClient(client) ).catch((error) => {
+    ).then((client) => startClient(client, nameSession)).catch((error) => {
         console.error('Erro ao inicializar Venom:', error);
     });
 }
 
-function startClient(clientSession){
+function startClient(clientSession, nameSession) {
+    sessions[nameSession] = clientSession;
     client = clientSession;
 
     client.onMessage(async (message) => {
@@ -87,8 +98,12 @@ function startClient(clientSession){
     });
 }
 
-function getClienteVenom(){
-    return client;
+function getAllClientsVenom() {
+    return sessions;
 }
 
-module.exports = {createNewSession, createOldSession, getClienteVenom}
+function getClienteVenom(session) {
+    return sessions[session];
+}
+
+module.exports = { createNewSession, createOldSession, getClienteVenom, getAllClientsVenom }

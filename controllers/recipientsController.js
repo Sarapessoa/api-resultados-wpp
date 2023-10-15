@@ -1,11 +1,18 @@
 const { setDestinos, getDestinos } = require('../utils');
+const { getClienteVenom } = require('../venom');
 
 const setRecipients = async (req, res) => {
     const destinos = req.body.destinos;
 
+    const { session } = req.headers;
+
+    const client = getClienteVenom(session);
+
+    if(client == undefined) return res.status(404).send('Sessão não encontrada');
+
     try {
 
-        await setDestinos(destinos);
+        await setDestinos(session, destinos);
 
     } catch (erro) {
         console.error('Error when sending: ', erro); // return object error
@@ -19,7 +26,13 @@ const setRecipients = async (req, res) => {
 const getRecipients =  async (req, res) => {
     try {
 
-        const destinos = await getDestinos();
+        const { session } = req.headers;
+
+        const client = getClienteVenom(session);
+    
+        if(client == undefined) return res.status(404).send('Sessão não encontrada');
+
+        const { destinos } = await getDestinos(session);
 
         return res.json(destinos);
 

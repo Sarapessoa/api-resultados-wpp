@@ -1,11 +1,13 @@
 const { getDestinos, getTextForResultados } = require('../utils');
-const { getClienteVenom } = require('../venom');
+const { getClienteVenom, getAllClientsVenom } = require('../venom');
 
 const sendMessage = async (req, res) => {
     const { msg, destinos } = req.body;
-    const client = getClienteVenom();
+    const { session } = req.headers;
 
-    if(client == undefined) return;
+    const client = getClienteVenom(session);
+
+    if (client == undefined) return res.status(404).send('Sessão não encontrada');
 
     try {
         for (const destino of destinos) {
@@ -25,35 +27,41 @@ const sendMessage = async (req, res) => {
 const sendResultadosMesasge = async (req, res) => {
     const msg = req.body.data;
 
-    const arrayDestinos = await getDestinos();
-    const client = getClienteVenom();
+    const allClients = getAllClientsVenom();
 
-    if(client == undefined) return;
+    for (const session in allClients) {
+        const client = allClients[session];
 
-    try {
-        
-        const aviso = await getTextForResultados();
-        for (const destino of arrayDestinos) {
-            await client.setChatState(destino, 0);
+        const { destinos, contact } = await getDestinos(session);
 
-            const result = await client.sendText(destino, msg);
-            console.log('Result: ', result);
+        try {
 
-            const resultAviso = await client.sendText(destino, aviso);
-            console.log('Result: ', resultAviso); // return object success
+            const aviso = await getTextForResultados();
+            for (const destino of destinos) {
+                await client.setChatState(destino, 0);
 
-            const resultContact = await client.sendContactVcard(destino, '5511961799124@c.us', 'Central - Aladin Loterias');
-            await client.setChatState(destino, 2);
-            console.log('Result: ', resultContact);
+                const result = await client.sendText(destino, msg);
+                console.log('Result: ', result);
+
+                if(contact.number != ""){
+                    const resultAviso = await client.sendText(destino, aviso);
+                    console.log('Result: ', resultAviso); // return object success
+                    
+                    const resultContact = await client.sendContactVcard(destino, contact.number);
+                    console.log('Result: ', resultContact);
+                }
+
+                await client.setChatState(destino, 2);
+            }
+
+        } catch (erro) {
+            console.error('Error when sending: ', erro); // return object error
+            return res.status(500).send('Erro para enviar a mensagem!');
         }
 
-    } catch (erro) {
-        console.error('Error when sending: ', erro); // return object error
-        return res.status(500).send('Erro para enviar a mensagem!');
     }
 
-    // Envie a resposta aqui, fora do bloco try-catch
-    return res.send('Mensagem enviada com sucesso!');
+    return res.status(200).send('Mensagens enviadas com sucesso!');
 };
 
 async function delay(ms) {

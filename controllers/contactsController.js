@@ -2,9 +2,11 @@ const { getClienteVenom } = require('../venom');
 
 const getContacts = async (req, res) => {
 
-    const client = getClienteVenom();
+    const { session } = req.headers;
 
-    if(client == undefined) return;
+    const client = getClienteVenom(session);
+
+    if(client == undefined) return res.status(404).send('Sessão não encontrada');
 
     try {
         const result = await client.getAllContacts();
@@ -20,9 +22,11 @@ const getContacts = async (req, res) => {
 
 const getContact = async (req, res) => {
 
-    const client = getClienteVenom();
+    const { session } = req.headers;
 
-    if(client == undefined) return;
+    const client = getClienteVenom(session);
+
+    if(client == undefined) return res.status(404).send('Sessão não encontrada');
 
     try {
         const result = await client.getAllContacts();
@@ -46,9 +50,11 @@ const getContact = async (req, res) => {
 
 const checkContact = async (req, res) => {
 
-    const client = getClienteVenom();
+    const { session } = req.headers;
 
-    if (client == undefined) return;
+    const client = getClienteVenom(session);
+
+    if(client == undefined) return res.status(404).send('Sessão não encontrada');
 
     try {
         const number = (req.params.number) + '@c.us';

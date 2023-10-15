@@ -1,7 +1,7 @@
-function tokenExist() {
+function tokenExist(session) {
     const fs = require('fs');
 
-    const pastaASerVerificada = 'tokens';
+    const pastaASerVerificada = `tokens/${session}`;
 
     try {
         // Tenta verificar a existência da pasta
@@ -9,6 +9,29 @@ function tokenExist() {
         return true; // A pasta existe
     } catch (err) {
         return false; // A pasta não existe
+    }
+
+
+}
+
+function allTokensExist() {
+    const fs = require('fs');
+    const path = require('path');
+
+    const pastaASerVerificada = 'tokens'; // Pasta que você deseja verificar
+
+    try {
+      const files = fs.readdirSync(pastaASerVerificada);
+  
+      // Filtrar pastas que começam com "session"
+      const sessionFolders = files.filter(file => {
+        const fullPath = path.join(pastaASerVerificada, file);
+        return fs.statSync(fullPath).isDirectory() && file.startsWith('session');
+      });
+  
+      return sessionFolders;
+    } catch (err) {
+      return []; // Erro ao ler o diretório ou nenhuma pasta "session" encontrada
     }
 
 
@@ -29,26 +52,31 @@ async function setTextForResultados(conteudo) {
     }
 }
 
-async function getDestinos() {
+async function getDestinos(session) {
     const fs = require('fs').promises;
 
     try {
         const dados = await fs.readFile('destinos.json', 'utf8');
         const objetoJSON = JSON.parse(dados);
-        const destinos = objetoJSON.destinos || [];
-        return destinos;
+
+        const objSession = objetoJSON[session];
+
+        return objSession;
     } catch (erro) {
         throw erro;
     }
 }
 
-async function setDestinos(novosDestinos) {
+async function setDestinos(session, novosDestinos) {
     const fs = require('fs').promises;
 
     try {
         const dados = await fs.readFile('destinos.json', 'utf8');
         const objetoJSON = JSON.parse(dados);
-        objetoJSON.destinos = novosDestinos;
+
+        const objSession = objetoJSON[session];
+
+        objSession.destinos = novosDestinos;
 
         await fs.writeFile('destinos.json', JSON.stringify(objetoJSON, null, 2), 'utf8');
     } catch (erro) {
@@ -56,10 +84,10 @@ async function setDestinos(novosDestinos) {
     }
 }
 
-async function deleteTokenResultados() {
+async function deleteTokenResultados(session) {
     const fs = require('fs').promises;
 
-    const pastaASerVerificada = 'tokens';
+    const pastaASerVerificada = `tokens/${session}`;
 
     try {
         const stats = await fs.stat(pastaASerVerificada);
@@ -99,6 +127,7 @@ async function getTextForResultados() {
 
 module.exports = {
     tokenExist,
+    allTokensExist,
     setTextForResultados,
     getDestinos,
     setDestinos,
