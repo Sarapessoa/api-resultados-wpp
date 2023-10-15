@@ -29,9 +29,7 @@ const getStatusClient = async (req, res) => {
     
         let status = '';
 
-        if (client == undefined) status = 'Disconnected'
-
-        status = client.spinStatus.previousText;
+        status = client == undefined ? 'Disconnected' : client.spinStatus.previousText;
 
         return res.json({status: status});
 

@@ -103,9 +103,11 @@ function getAllClientsVenom() {
 }
 
 function getClienteVenom(session) {
-    if(!sessions.hasOwnProperty(session)) return undefined;
-    
-    return sessions[session];
+    if(sessions.hasOwnProperty(session)){
+        return sessions[session];
+    }
+
+    return undefined;
 }
 
 module.exports = { createNewSession, createOldSession, getClienteVenom, getAllClientsVenom }
