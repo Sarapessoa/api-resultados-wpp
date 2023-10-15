@@ -103,6 +103,8 @@ function getAllClientsVenom() {
 }
 
 function getClienteVenom(session) {
+    if(!sessions.hasOwnProperty(session)) return undefined;
+    
     return sessions[session];
 }
 
