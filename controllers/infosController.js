@@ -33,9 +33,9 @@ const getStatusClient = async (req, res) => {
     
         let status = '';
 
-        const statusWA = await client.getState();
+        const statusWA = client == undefined ? 'disconnected' : await client.getState();
 
-        status = client == undefined ? 'disconnected' : statusWA.toLowerCase();
+        status = statusWA.toLowerCase();
 
         return res.json({status: status});
 
