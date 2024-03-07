@@ -29,11 +29,13 @@ const getStatusClient = async (req, res) => {
     try {
         const { session } = req.headers;
 
-        const client = getClienteVenom(session);
+        const client = getClient(session);
     
         let status = '';
 
-        status = client == undefined ? 'Disconnected' : client.spinStatus.previousText;
+        const statusWA = await client.getState();
+
+        status = client == undefined ? 'disconnected' : statusWA.toLowerCase();
 
         return res.json({status: status});
 
