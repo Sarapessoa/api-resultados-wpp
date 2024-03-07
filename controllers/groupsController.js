@@ -1,17 +1,27 @@
 const { getClienteVenom } = require('../venom');
+const { getClient, getAllClients } =  require('../whatsapp');
 
 const getGrupos = async (req, res) => {
 
     const { session } = req.headers;
 
-    const client = getClienteVenom(session);
+    const client = getClient(session);
 
     if(client == undefined) return res.status(404).send('Sessão não encontrada');
 
     try {
-        const result = await client.getAllChatsGroups();
+        const result = await client.getChats();
+        const groups = [];
 
-        return res.json(result);
+        for(let i = 0; i < result.length; i++){
+            const chat = result[i];
+
+            if(chat.isGroup) {
+                groups.push(chat)
+            };
+        }
+
+        return res.json(groups);
 
     } catch (erro) {
         console.error('Error when sending: ', erro); // return object error
@@ -24,7 +34,7 @@ const getGrupoForName = async (req, res) => {
 
     const { session } = req.headers;
 
-    const client = getClienteVenom(session);
+    const client = getClient(session);
 
     if(client == undefined) return res.status(404).send('Sessão não encontrada');
 
@@ -49,6 +59,26 @@ const getGrupoForName = async (req, res) => {
     }
 
 };
+
+const getPictureGroup = async (req, res) => {
+    const { session } = req.headers;
+
+    const client = getClient(session);
+
+    if(client == undefined) return res.status(404).send('Sessão não encontrada');
+
+    try {
+        const id = req.params.id;
+
+        const picture = await client.getProfilePicUrl(id);
+
+        return res.json(picture);
+
+    } catch (erro) {
+        console.error('Error when sending: ', erro); // return object error
+        return res.status(500).send('Erro ao retornar a imagem do grupo!');
+    }
+}
 
 const criarGrupo = async (req, res) => {
     const { session } = req.headers;
@@ -177,4 +207,4 @@ async function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-module.exports = { getGrupos, getGrupoForName, criarGrupo, colocarMembroGrupo, removerMembroGrupo, getGroupInviteLink, colocarMembrosGrupo }
+module.exports = { getGrupos, getGrupoForName, criarGrupo, colocarMembroGrupo, removerMembroGrupo, getGroupInviteLink, colocarMembrosGrupo, getPictureGroup }

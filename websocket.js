@@ -1,22 +1,19 @@
-const { createNewSession, getAllClientsVenom} = require('./venom');
+// const { createNewSession, getAllClientsVenom} = require('./venom');
+const { createNewSession, getAllClients } = require('./whatsapp');
 const { tokenExist, deleteTokenResultados, setDestinos } = require('./utils');
 
-const clients = new Set();
+let clients = {};
 const clientsSessions = {};
 
 function listenWebSocket(wss){
     let ws;
-    let clientsVenom;
     let nameSession;
 
     wss.on('connection', async (wsNew) => {
-        clientsVenom = getAllClientsVenom();
+        clients = getAllClients();
         console.log('Conexão WebSocket estabelecida');
 
         ws = wsNew;
-    
-        clients.add(ws);
-
     
         ws.on('close', () => {
             console.log('Cliente desconectado');
@@ -48,9 +45,9 @@ function listenWebSocket(wss){
                     console.log('desconectado');
                 }
                 else {
-                    console.log(clientsVenom[nameSession]);
-                    if (clientsVenom[nameSession] != undefined) {
-                        const status = await clientsVenom[nameSession].getConnectionState();
+                    // console.log(clients[nameSession]);
+                    if (clients[nameSession] != undefined) {
+                        const status = await clients[nameSession].getState();
 
                         console.log(status);
             
@@ -63,46 +60,46 @@ function listenWebSocket(wss){
     
             if (type == 'qrcode') {
     
-                if (tokenExist(nameSession)) {
-                    if (clientsVenom[nameSession]) {
+                // if (tokenExist(nameSession)) {
+                //     if (clientsVenom[nameSession]) {
     
-                        clientsVenom[nameSession].close()
-                        .then(() => {
-                            console.log('Sessão encerrada com sucesso.');
-                        })
-                        .catch((erro) => {
-                            console.error('Erro ao encerrar a sessão:', erro);
-                        });
+                //         clientsVenom[nameSession].close()
+                //         .then(() => {
+                //             console.log('Sessão encerrada com sucesso.');
+                //         })
+                //         .catch((erro) => {
+                //             console.error('Erro ao encerrar a sessão:', erro);
+                //         });
     
-                        deleteTokenResultados(nameSession);
-                        setDestinos(nameSession, []);
-                    }
+                //         deleteTokenResultados(nameSession);
+                //         setDestinos(nameSession, []);
+                //     }
     
-                }
+                // }
     
     
                 createNewSession(emitToAllClientsSession, nameSession);
-                clientsVenom = getAllClientsVenom();
+                clients = getAllClients();
             }
     
             if (type == 'getStatusClient') {
-                if (clientsVenom[nameSession] != undefined) {
-                    const status = await clientsVenom[nameSession].getConnectionState();
+                if (clients[nameSession] != undefined) {
+                    // const status = await clientsVenom[nameSession].getConnectionState();
     
-                    emitToAllClientsSession(nameSession, 'StatusClient', status)
+                    // emitToAllClientsSession(nameSession, 'StatusClient', status)
                 }
             }
     
         });
     
-        if (clientsVenom[nameSession] != undefined) {
+        if (clients[nameSession] != undefined) {
     
-            clientsVenom[nameSession].onStateChange((state) => {
-                console.log('State changed: ', state);
+            // clientsVenom[nameSession].onStateChange((state) => {
+            //     console.log('State changed: ', state);
     
-                emitToAllClientsSession(nameSession, 'StatusClient', state)
+            //     emitToAllClientsSession(nameSession, 'StatusClient', state)
     
-            });
+            // });
         }
     });
 }
@@ -110,8 +107,9 @@ function listenWebSocket(wss){
 function emitToAllClients(eventName, eventData) {
     const eventMessage = JSON.stringify({ type: eventName, data: eventData });
 
-    for (const client of clients) {
-        client.send(eventMessage);
+    for (const session of clientsSessions) {
+        console.log(session);
+        // client.send(eventMessage);
     }
 }
 

@@ -1,12 +1,13 @@
 const { setDestinos, getDestinos } = require('../utils');
-const { getClienteVenom } = require('../venom');
+// const { getClienteVenom } = require('../venom');
+const { getClient, getAllClients } =  require('../whatsapp');
 
 const setRecipients = async (req, res) => {
     const destinos = req.body.destinos;
 
     const { session } = req.headers;
 
-    const client = getClienteVenom(session);
+    const client = getClient(session);
 
     if(client == undefined) return res.status(404).send('Sessão não encontrada');
 
@@ -28,7 +29,7 @@ const getRecipients =  async (req, res) => {
 
         const { session } = req.headers;
 
-        const client = getClienteVenom(session);
+        const client = getClient(session);
     
         if(client == undefined) return res.status(404).send('Sessão não encontrada');
 

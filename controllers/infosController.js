@@ -1,18 +1,22 @@
 const { getClienteVenom } = require('../venom');
+const { getClient, getAllClients } =  require('../whatsapp');
 
 const getInfos = async (req, res) => {
 
     const { session } = req.headers;
 
-    const client = getClienteVenom(session);
+    const client = getClient(session);
 
     if(client == undefined) return res.status(404).send('Sessão não encontrada');
 
     try {
 
-        const result = await client.getHostDevice();
+        const result = await client.info;
+        const picture = await client.getProfilePicUrl(result.me._serialized);
+        let infos = {... result};
+        infos.img = picture;
 
-        return res.json(result);
+        return res.json(infos);
 
     } catch (erro) {
         console.error('Error when sending: ', erro); // return object error

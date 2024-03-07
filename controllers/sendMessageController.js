@@ -1,19 +1,18 @@
 const { getDestinos, getTextForResultados } = require('../utils');
-const { getClienteVenom, getAllClientsVenom } = require('../venom');
+// const { getClienteVenom, getAllClientsVenom } = require('../venom');
+const { getClient, getAllClients } =  require('../whatsapp');
 
 const sendMessage = async (req, res) => {
     const { msg, destinos } = req.body;
     const { session } = req.headers;
 
-    const client = getClienteVenom(session);
+    const client = getClient(session);
 
     if (client == undefined) return res.status(404).send('Sessão não encontrada');
 
     try {
         for (const destino of destinos) {
-            await client.setChatState(destino, 0);
-            const result = await client.sendText(destino, msg);
-            await client.setChatState(destino, 2);
+            const result = await client.sendMessage(destino, msg);
             console.log('Result: ', result);
             await delay(1000);
         }
@@ -27,7 +26,7 @@ const sendMessage = async (req, res) => {
 const sendResultadosMesasge = async (req, res) => {
     const msg = req.body.data;
 
-    const allClients = getAllClientsVenom();
+    const allClients = getAllClients();
 
     for (const session in allClients) {
         const client = allClients[session];
@@ -38,20 +37,19 @@ const sendResultadosMesasge = async (req, res) => {
 
             const aviso = await getTextForResultados();
             for (const destino of destinos) {
-                await client.setChatState(destino, 0);
 
-                const result = await client.sendText(destino, msg);
-                console.log('Result: ', result);
+                const result = await client.sendMessage(destino, msg);
+                // console.log('Result: ', result);
 
-                if(contact.number != ""){
-                    const resultAviso = await client.sendText(destino, aviso);
-                    console.log('Result: ', resultAviso); // return object success
+                if(contact != ""){
+                    const resultAviso = await client.sendMessage(destino, aviso);
+                    // console.log('Result: ', resultAviso); // return object success
                     
-                    const resultContact = await client.sendContactVcard(destino, contact.number);
-                    console.log('Result: ', resultContact);
+                    const contactVcard = await client.getContactById(contact);                 
+                    const resultContact = await client.sendMessage(destino, contactVcard, { parseVCards: true });
+                    // console.log('Result: ', resultContact);
                 }
 
-                await client.setChatState(destino, 2);
             }
 
         } catch (erro) {

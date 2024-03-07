@@ -6,7 +6,7 @@ const cors = require('cors');
 
 const { listenWebSocket } = require('./websocket');
 const { allTokensExist } = require('./utils');
-const { createOldSession } = require('./venom');
+const { createOldSession } = require('./whatsapp');
 const routes = require('./routes');
 
 dotenv.config();

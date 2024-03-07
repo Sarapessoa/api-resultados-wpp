@@ -1,15 +1,16 @@
-const { getClienteVenom } = require('../venom');
+// const { getClienteVenom } = require('../venom');
+const { getClient, getAllClients } =  require('../whatsapp');
 
 const getContacts = async (req, res) => {
 
     const { session } = req.headers;
 
-    const client = getClienteVenom(session);
+    const client = getClient(session);
 
     if(client == undefined) return res.status(404).send('Sessão não encontrada');
 
     try {
-        const result = await client.getAllContacts();
+        const result = await client.getContacts();
 
         return res.json(result);
 
@@ -48,6 +49,26 @@ const getContact = async (req, res) => {
 
 };
 
+const getPictureContact = async (req, res) => {
+    const { session } = req.headers;
+
+    const client = getClient(session);
+
+    if(client == undefined) return res.status(404).send('Sessão não encontrada');
+
+    try {
+        const id = req.params.id;
+
+        const picture = await client.getProfilePicUrl(id);
+
+        return res.json(picture);
+
+    } catch (erro) {
+        console.error('Error when sending: ', erro); // return object error
+        return res.status(500).send('Erro ao retornar a imagem do contato!');
+    }
+}
+
 const checkContact = async (req, res) => {
 
     const { session } = req.headers;
@@ -70,4 +91,4 @@ const checkContact = async (req, res) => {
 
 };
 
-module.exports = { getContacts, getContact, checkContact }
+module.exports = { getContacts, getContact, checkContact, getPictureContact }

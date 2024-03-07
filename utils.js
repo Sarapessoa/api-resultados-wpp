@@ -1,7 +1,7 @@
 function tokenExist(session) {
     const fs = require('fs');
 
-    const pastaASerVerificada = `tokens/${session}`;
+    const pastaASerVerificada = `.wwebjs_auth/session-${session}`;
 
     try {
         // Tenta verificar a existência da pasta
@@ -18,7 +18,7 @@ function allTokensExist() {
     const fs = require('fs');
     const path = require('path');
 
-    const pastaASerVerificada = 'tokens'; // Pasta que você deseja verificar
+    const pastaASerVerificada = '.wwebjs_auth'; // Pasta que você deseja verificar
 
     try {
       const files = fs.readdirSync(pastaASerVerificada);
@@ -26,10 +26,14 @@ function allTokensExist() {
       // Filtrar pastas que começam com "session"
       const sessionFolders = files.filter(file => {
         const fullPath = path.join(pastaASerVerificada, file);
-        return fs.statSync(fullPath).isDirectory() && file.startsWith('session');
+        return fs.statSync(fullPath).isDirectory() && file.startsWith('session-');
       });
+
+      const sessionsFormat = sessionFolders.map(sessionName => {
+        return sessionName.replace('session-', '');
+      })
   
-      return sessionFolders;
+      return sessionsFormat;
     } catch (err) {
       return []; // Erro ao ler o diretório ou nenhuma pasta "session" encontrada
     }
@@ -87,7 +91,7 @@ async function setDestinos(session, novosDestinos) {
 async function deleteTokenResultados(session) {
     const fs = require('fs').promises;
 
-    const pastaASerVerificada = `tokens/${session}`;
+    const pastaASerVerificada = `.wwebjs_auth/session-${session}`;
 
     try {
         const stats = await fs.stat(pastaASerVerificada);
