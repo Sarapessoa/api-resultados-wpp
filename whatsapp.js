@@ -21,6 +21,19 @@ function createNewSession(emitToAllClientsSession, nameSession) {
             emitToAllClientsSession(nameSession, 'QrCodeBase64', base64Image);
         });
     });
+
+    client.on('authenticated', () => {
+        console.log('autenticado com sucesso!');
+    });
+
+    client.on('auth_failure', (message) => {
+        console.log('autenticadção falhou!');
+        console.log(message)
+    });
+
+    client.on('disconnected', () => {
+        console.log('cliente desconectado!');
+    });
     
     client.on('ready', () => {
         console.log('Client is ready!');
@@ -44,7 +57,23 @@ function createOldSession(nameSession) {
                 clientId: nameSession
             })
         });
-    
+
+        client.on('qr', (qr) => {
+            console.log('qr code necessário')
+        });
+
+        client.on('authenticated', () => {
+            console.log('autenticado com sucesso!');
+        });
+
+        client.on('auth_failure', (message) => {
+            console.log('autenticadção falhou!');
+            console.log(message)
+        });
+
+        client.on('disconnected', () => {
+            console.log('cliente desconectado!');
+        });
     
         client.on('ready', () => {
             console.log('Client is ready!');
