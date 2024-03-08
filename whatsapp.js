@@ -1,5 +1,6 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrCode = require('qrcode');
+const { deleteTokenResultados } = require('./utils');
 
 let sessions = {};
 
@@ -29,10 +30,14 @@ function createNewSession(emitToAllClientsSession, nameSession) {
     client.on('auth_failure', (message) => {
         console.log('autenticadção falhou!');
         console.log(message)
+        deleteTokenResultados(nameSession);
+        emitToAllClientsSession(nameSession, 'StatusClient', 'disconnected');
     });
 
     client.on('disconnected', () => {
         console.log('cliente desconectado!');
+        deleteTokenResultados(nameSession);
+        emitToAllClientsSession(nameSession, 'StatusClient', 'disconnected');
     });
     
     client.on('ready', () => {
@@ -59,7 +64,8 @@ function createOldSession(nameSession) {
         });
 
         client.on('qr', (qr) => {
-            console.log('qr code necessário')
+            console.log('qr code necessário');
+            reject({state: false, data: "escanear-qr-code"});
         });
 
         client.on('authenticated', () => {
@@ -68,7 +74,8 @@ function createOldSession(nameSession) {
 
         client.on('auth_failure', (message) => {
             console.log('autenticadção falhou!');
-            console.log(message)
+            console.log(message);
+            reject({state: false, data: message});
         });
 
         client.on('disconnected', () => {
@@ -78,16 +85,11 @@ function createOldSession(nameSession) {
         client.on('ready', () => {
             console.log('Client is ready!');
             sessions[nameSession] = client;
-            resolve(client);
+            resolve({state: true, data: client});
         });
     
         client.on('change_state', (state) => {
             console.log('status mudou', state);
-        });
-
-        client.on('message', (msg) => {
-            console.log('nova mensagem');
-            console.log(msg);
         });
         
         

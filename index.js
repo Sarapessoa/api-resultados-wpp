@@ -7,6 +7,7 @@ const cors = require('cors');
 const { listenWebSocket } = require('./websocket');
 const { allTokensExist } = require('./utils');
 const { createOldSession } = require('./whatsapp');
+const { deleteTokenResultados } = require('./utils');
 const routes = require('./routes');
 
 dotenv.config();
@@ -41,6 +42,7 @@ server.listen(PORT, async () => {
            const res = await createOldSession(session);
         } catch (error) {
             console.error('Erro durante a criação da sessão:', error);
+            await deleteTokenResultados(session);
         }
 
     }
