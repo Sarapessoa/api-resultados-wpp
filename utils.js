@@ -99,7 +99,7 @@ async function deleteTokenResultados(session) {
         if (stats.isDirectory()) {
 
             // Agora, exclua o diretório
-            await fs.rmdir(pastaASerVerificada, { recursive: true, force: true });
+            await fs.rm(pastaASerVerificada, { recursive: true, force: true });
             console.log('Pasta sessionBotResultados foi excluída.');
         } else {
             console.log('O caminho não é um diretório.');

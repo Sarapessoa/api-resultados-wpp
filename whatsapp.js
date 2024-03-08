@@ -27,19 +27,19 @@ function createNewSession(emitToAllClientsSession, nameSession) {
         console.log('autenticado com sucesso!');
     });
 
-    client.on('auth_failure', (message) => {
+    client.on('auth_failure', async (message) => {
         console.log('autenticadção falhou!');
         console.log(message)
-        deleteTokenResultados(nameSession);
         emitToAllClientsSession(nameSession, 'StatusClient', 'disconnected');
-        sessions[nameSession] = undefined;
+        await client.destroy();
+        sessions[nameSession] = null;
+        client = null;
+        deleteTokenResultados(nameSession);
     });
 
     client.on('disconnected', () => {
         console.log('cliente desconectado!');
-        deleteTokenResultados(nameSession);
         emitToAllClientsSession(nameSession, 'StatusClient', 'disconnected');
-        sessions[nameSession] = undefined;
     });
     
     client.on('ready', () => {
@@ -65,9 +65,11 @@ function createOldSession(nameSession) {
             })
         });
 
-        client.on('qr', (qr) => {
+        client.on('qr', async (qr) => {
             console.log('qr code necessário');
-            sessions[nameSession] = undefined;
+            await client.destroy();
+            sessions[nameSession] = null;
+            client = null;
             reject({state: false, data: "escanear-qr-code"});
         });
 
@@ -75,10 +77,12 @@ function createOldSession(nameSession) {
             console.log('autenticado com sucesso!');
         });
 
-        client.on('auth_failure', (message) => {
+        client.on('auth_failure', async (message) => {
             console.log('autenticadção falhou!');
             console.log(message);
-            sessions[nameSession] = undefined;
+            await client.destroy();
+            sessions[nameSession] = null;
+            client = null;
             reject({state: false, data: message});
         });
 
@@ -95,7 +99,6 @@ function createOldSession(nameSession) {
         client.on('change_state', (state) => {
             console.log('status mudou', state);
         });
-        
         
         client.initialize();
     });
