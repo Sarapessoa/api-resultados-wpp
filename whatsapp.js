@@ -32,12 +32,14 @@ function createNewSession(emitToAllClientsSession, nameSession) {
         console.log(message)
         deleteTokenResultados(nameSession);
         emitToAllClientsSession(nameSession, 'StatusClient', 'disconnected');
+        sessions[nameSession] = undefined;
     });
 
     client.on('disconnected', () => {
         console.log('cliente desconectado!');
         deleteTokenResultados(nameSession);
         emitToAllClientsSession(nameSession, 'StatusClient', 'disconnected');
+        sessions[nameSession] = undefined;
     });
     
     client.on('ready', () => {
@@ -65,6 +67,7 @@ function createOldSession(nameSession) {
 
         client.on('qr', (qr) => {
             console.log('qr code necessário');
+            sessions[nameSession] = undefined;
             reject({state: false, data: "escanear-qr-code"});
         });
 
@@ -75,6 +78,7 @@ function createOldSession(nameSession) {
         client.on('auth_failure', (message) => {
             console.log('autenticadção falhou!');
             console.log(message);
+            sessions[nameSession] = undefined;
             reject({state: false, data: message});
         });
 
