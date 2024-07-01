@@ -41,7 +41,7 @@ const sendResultadosMesasge = async (req, res) => {
                 const result = await client.sendMessage(destino, msg);
                 // console.log('Result: ', result);
 
-                if(contact != ""){
+                if(contact != "" && contact != undefined) {
                     const resultAviso = await client.sendMessage(destino, aviso);
                     // console.log('Result: ', resultAviso); // return object success
                     
