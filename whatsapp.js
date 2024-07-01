@@ -13,6 +13,7 @@ function createNewSession(emitToAllClientsSession, nameSession) {
         }),
         puppeteer: {
             headless: true,
+            executablePath: process.env.GOOGLE_CHROME_BIN || '/usr/bin/google-chrome',
             args: ['--no-sandbox', '--disable-gpu'],
         },
         webVersionCache: {
