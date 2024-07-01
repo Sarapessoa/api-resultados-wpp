@@ -73,7 +73,7 @@ async function getDestinos(session) {
 
 async function setDestinos(session, novosDestinos) {
     const fs = require('fs').promises;
-    
+
     try {
         let objetoJSON;
 
@@ -90,8 +90,18 @@ async function setDestinos(session, novosDestinos) {
             }
         }
 
-        // Atualiza ou adiciona a sessão com os novos destinos
-        objetoJSON[session] = { destinos: novosDestinos };
+        // Verifica se a sessão existe, se não, inicializa-a
+        if (!objetoJSON[session]) {
+            objetoJSON[session] = {};
+        }
+
+        // Inicializa contact se não existir
+        if (!objetoJSON[session].contact) {
+            objetoJSON[session].contact = "";
+        }
+
+        // Atualiza ou adiciona os novos destinos
+        objetoJSON[session].destinos = novosDestinos;
 
         // Escreve os dados atualizados de volta no arquivo destinos.json
         await fs.writeFile('destinos.json', JSON.stringify(objetoJSON, null, 2), 'utf8');
