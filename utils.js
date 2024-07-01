@@ -72,18 +72,29 @@ async function getDestinos(session) {
 }
 
 async function setDestinos(session, novosDestinos) {
-    const fs = require('fs').promises;
-
     try {
-        const dados = await fs.readFile('destinos.json', 'utf8');
-        const objetoJSON = JSON.parse(dados);
+        let objetoJSON;
 
-        const objSession = objetoJSON[session];
+        // Tenta ler o arquivo destinos.json
+        try {
+            const dados = await fs.readFile('destinos.json', 'utf8');
+            objetoJSON = JSON.parse(dados);
+        } catch (erro) {
+            if (erro.code === 'ENOENT') {
+                // Se o arquivo não existir, inicializa um objeto vazio
+                objetoJSON = {};
+            } else {
+                throw erro;
+            }
+        }
 
-        objSession.destinos = novosDestinos;
+        // Atualiza ou adiciona a sessão com os novos destinos
+        objetoJSON[session] = { destinos: novosDestinos };
 
+        // Escreve os dados atualizados de volta no arquivo destinos.json
         await fs.writeFile('destinos.json', JSON.stringify(objetoJSON, null, 2), 'utf8');
     } catch (erro) {
+        console.error('Erro ao processar destinos:', erro);
         throw erro;
     }
 }
