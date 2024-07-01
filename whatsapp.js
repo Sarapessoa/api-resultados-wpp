@@ -3,13 +3,22 @@ const qrCode = require('qrcode');
 const { deleteTokenResultados } = require('./utils');
 
 let sessions = {};
+const wwebVersion = '2.2412.54';
 
 function createNewSession(emitToAllClientsSession, nameSession) {
 
     let client = new Client({
         authStrategy: new LocalAuth({
             clientId: nameSession
-        })
+        }),
+        puppeteer: {
+            headless: true,
+            args: ['--no-sandbox', '--disable-gpu'],
+        },
+        webVersionCache: {
+            type: 'remote',
+            remotePath: `https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/${wwebVersion}.html`,
+        }
     });
 
     client.on('qr', (qr) => {
@@ -57,53 +66,63 @@ function createNewSession(emitToAllClientsSession, nameSession) {
 }
 
 function createOldSession(nameSession) {
-
     return new Promise((resolve, reject) => {
         let client = new Client({
             authStrategy: new LocalAuth({
                 clientId: nameSession
-            })
+            }),
+            puppeteer: {
+                headless: true,
+                args: ['--no-sandbox', '--disable-gpu'],
+            },
+            webVersionCache: {
+                type: 'remote',
+                remotePath: `https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/${wwebVersion}.html`,
+            },
         });
 
         client.on('qr', async (qr) => {
-            console.log('qr code necessário');
+            console.log('QR code necessário');
             await client.destroy();
             sessions[nameSession] = null;
             client = null;
-            reject({state: false, data: "escanear-qr-code"});
+            reject({ state: false, data: "escanear-qr-code" });
         });
 
         client.on('authenticated', () => {
-            console.log('autenticado com sucesso!');
+            console.log('Autenticado com sucesso!');
         });
 
         client.on('auth_failure', async (message) => {
-            console.log('autenticadção falhou!');
+            console.log('Autenticação falhou!');
             console.log(message);
             await client.destroy();
             sessions[nameSession] = null;
             client = null;
-            reject({state: false, data: message});
+            reject({ state: false, data: message });
         });
 
         client.on('disconnected', () => {
-            console.log('cliente desconectado!');
+            console.log('Cliente desconectado!');
         });
-    
+
         client.on('ready', () => {
-            console.log('Client is ready!');
+            console.log('Cliente está pronto!');
             sessions[nameSession] = client;
-            resolve({state: true, data: client});
+            resolve({ state: true, data: client });
         });
-    
+
         client.on('change_state', (state) => {
-            console.log('status mudou', state);
+            console.log('Status mudou', state);
         });
-        
-        client.initialize();
+
+        // Inicialize o cliente
+        client.initialize().catch((error) => {
+            console.error('Erro durante a inicialização do cliente:', error);
+            reject({ state: false, data: error });
+        });
     });
 }
-
 
 function getAllClients() {
     return sessions;
