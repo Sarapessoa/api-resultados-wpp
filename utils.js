@@ -72,6 +72,8 @@ async function getDestinos(session) {
 }
 
 async function setDestinos(session, novosDestinos) {
+    const fs = require('fs').promises;
+    
     try {
         let objetoJSON;
 
