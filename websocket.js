@@ -5,7 +5,7 @@ const { tokenExist, deleteTokenResultados, setDestinos } = require('./utils');
 let clients = {};
 const clientsSessions = {};
 
-function listenWebSocket(wss){
+function listenWebSocket(wss, store) {
     let ws;
     let nameSession;
 
@@ -40,7 +40,9 @@ function listenWebSocket(wss){
                 console.log('entrou no type', type);
                 console.log('name session', nameSession);
 
-                if (!tokenExist(nameSession)) {
+                const sessionExists = await store.sessionExists({session: `RemoteAuth-${nameSession}`});
+
+                if (!sessionExists) {
                     emitToAllClientsSession(nameSession, 'StatusClient', 'DISCONNECT');
                     console.log('desconectado');
                 }
@@ -78,7 +80,7 @@ function listenWebSocket(wss){
                 // }
     
     
-                createNewSession(emitToAllClientsSession, nameSession);
+                createNewSession(emitToAllClientsSession, nameSession, store);
                 clients = getAllClients();
             }
     

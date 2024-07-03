@@ -17,34 +17,58 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-const server = http.createServer(app);
+const { MongoStore } = require('wwebjs-mongo');
+const mongoose = require('mongoose');
 
-const wss = new WebSocket.Server({ server });
+mongoose.connect(process.env.MONGODB_URI).then(async () => {
+    const store = new MongoStore({ mongoose: mongoose });
 
-listenWebSocket(wss);
+    const server = http.createServer(app);
 
-app.use('/', routes);
+    const wss = new WebSocket.Server({ server });
 
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, async () => {
+    listenWebSocket(wss, store);
 
-    const sessionsNow = allTokensExist();
+    app.use('/', routes);
 
-    
-    if(sessionsNow.length == 0){
-        console.log('Nenhum token existente');
-    }
+    const PORT = process.env.PORT || 3000;
+    server.listen(PORT, async () => {
 
-    for(const session of sessionsNow){
-        console.log('token existe para: ', session);
+        const sessionExists = await store.sessionExists({session: 'RemoteAuth-sessionBotResultados'});
 
-        try {
-           const res = await createOldSession(session);
-        } catch (error) {
-            console.error('Erro durante a criação da sessão:', error);
-            await deleteTokenResultados(session);
+        console.log('Servidor iniciado na porta:', PORT);
+        console.log('Sessão existente: ', sessionExists);
+
+        if(sessionExists){
+            try {
+                const res = await createOldSession('sessionBotResultados', store);
+            } catch (error) {
+                console.error('Erro durante a criação da sessão:', error);
+                // await deleteTokenResultados(session);
+            }
         }
 
-    }
-    
+        // const sessionsNow = allTokensExist();
+
+        
+        // if(sessionsNow.length == 0){
+        //     console.log('Nenhum token existente');
+        // }
+
+        // for(const session of sessionsNow){
+        //     console.log('token existe para: ', session);
+
+        //     try {
+        //     const res = await createOldSession(session);
+        //     } catch (error) {
+        //         console.error('Erro durante a criação da sessão:', error);
+        //         await deleteTokenResultados(session);
+        //     }
+
+        // }
+        
+    });
+
+}).catch((err) => {
+    console.error('MongoDB connection error:', err);
 });

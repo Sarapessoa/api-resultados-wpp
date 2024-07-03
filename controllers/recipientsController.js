@@ -4,6 +4,7 @@ const { getClient, getAllClients } =  require('../whatsapp');
 
 const setRecipients = async (req, res) => {
     const destinos = req.body.destinos;
+    const contact = req.body.contact;
 
     const { session } = req.headers;
 
@@ -13,7 +14,7 @@ const setRecipients = async (req, res) => {
 
     try {
 
-        await setDestinos(session, destinos);
+        await setDestinos(session, destinos, contact);
 
     } catch (erro) {
         console.error('Error when sending: ', erro); // return object error
@@ -33,9 +34,9 @@ const getRecipients =  async (req, res) => {
     
         if(client == undefined) return res.status(404).send('Sessão não encontrada');
 
-        const { destinos } = await getDestinos(session);
+        const { destinos, contact } = await getDestinos(session);
 
-        return res.json(destinos);
+        return res.json({ destinos, contact });
 
     } catch (erro) {
         console.error('Error when sending: ', erro); // return object error

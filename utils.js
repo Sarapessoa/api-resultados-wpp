@@ -1,7 +1,7 @@
 function tokenExist(session) {
     const fs = require('fs');
 
-    const pastaASerVerificada = `.wwebjs_auth/session-${session}`;
+    const pastaASerVerificada = `sessions/session-${session}`;
 
     try {
         // Tenta verificar a existência da pasta
@@ -18,7 +18,7 @@ function allTokensExist() {
     const fs = require('fs');
     const path = require('path');
 
-    const pastaASerVerificada = '.wwebjs_auth'; // Pasta que você deseja verificar
+    const pastaASerVerificada = 'sessions'; // Pasta que você deseja verificar
 
     try {
       const files = fs.readdirSync(pastaASerVerificada);
@@ -71,7 +71,7 @@ async function getDestinos(session) {
     }
 }
 
-async function setDestinos(session, novosDestinos) {
+async function setDestinos(session, novosDestinos, newContact) {
     const fs = require('fs').promises;
 
     try {
@@ -103,6 +103,8 @@ async function setDestinos(session, novosDestinos) {
         // Atualiza ou adiciona os novos destinos
         objetoJSON[session].destinos = novosDestinos;
 
+        objetoJSON[session].contact = newContact;
+        
         // Escreve os dados atualizados de volta no arquivo destinos.json
         await fs.writeFile('destinos.json', JSON.stringify(objetoJSON, null, 2), 'utf8');
     } catch (erro) {
@@ -114,7 +116,7 @@ async function setDestinos(session, novosDestinos) {
 async function deleteTokenResultados(session) {
     const fs = require('fs').promises;
 
-    const pastaASerVerificada = `.wwebjs_auth/session-${session}`;
+    const pastaASerVerificada = `sessions/session-${session}`;
 
     try {
         const stats = await fs.stat(pastaASerVerificada);

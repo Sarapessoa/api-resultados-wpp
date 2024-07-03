@@ -59,6 +59,8 @@ const sendResultadosMesasge = async (req, res) => {
 
     }
 
+    console.log(allClients)
+
     return res.status(200).send('Mensagens enviadas com sucesso!');
 };
 

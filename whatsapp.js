@@ -1,34 +1,34 @@
-const { Client, LocalAuth } = require('whatsapp-web.js');
+const { Client, LocalAuth, RemoteAuth } = require('whatsapp-web.js');
 const qrCode = require('qrcode');
 const { deleteTokenResultados } = require('./utils');
+require('dotenv').config();
+
 
 let sessions = {};
 const wwebVersion = '2.2412.54';
 
-function createNewSession(emitToAllClientsSession, nameSession) {
+function createNewSession(emitToAllClientsSession, nameSession, store) {
 
     let client = new Client({
-        authStrategy: new LocalAuth({
-            clientId: nameSession
+        authStrategy: new RemoteAuth({
+            store: store,
+            clientId: nameSession,
+            backupSyncIntervalMs: 300000
         }),
         puppeteer: {
             headless: true,
             executablePath: process.env.GOOGLE_CHROME_BIN || '/usr/bin/google-chrome',
-            args: ['--no-sandbox', '--disable-gpu'],
-        },
-        webVersionCache: {
-            type: 'remote',
-            remotePath: `https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/${wwebVersion}.html`,
+            args: ['--no-sandbox', '--disable-gpu', '--disable-setuid-sandbox'],
         }
     });
 
     client.on('qr', (qr) => {
         qrCode.toDataURL(qr, { errorCorrectionLevel: 'H' }, (err, url) => {
             if (err) throw err;
-          
+        
             // Converte a imagem do QR code em base64
             const base64Image = "data:image/png;base64," + url.split(',')[1];
-          
+        
             emitToAllClientsSession(nameSession, 'QrCodeBase64', base64Image);
         });
     });
@@ -41,15 +41,19 @@ function createNewSession(emitToAllClientsSession, nameSession) {
         console.log('autenticadção falhou!');
         console.log(message)
         emitToAllClientsSession(nameSession, 'StatusClient', 'disconnected');
-        await client.destroy();
+        if(client != undefined) await client.destroy();
+        await store.delete({session: `RemoteAuth-${nameSession}`});
         sessions[nameSession] = null;
         client = null;
-        deleteTokenResultados(nameSession);
     });
 
-    client.on('disconnected', () => {
+    client.on('disconnected', async () => {
         console.log('cliente desconectado!');
         emitToAllClientsSession(nameSession, 'StatusClient', 'disconnected');
+        if(client != undefined) await client.destroy();
+        await store.delete({session: `RemoteAuth-${nameSession}`});
+        sessions[nameSession] = null;
+        client = null;
     });
     
     client.on('ready', () => {
@@ -61,30 +65,35 @@ function createNewSession(emitToAllClientsSession, nameSession) {
     client.on('change_state', (state) => {
         console.log('status mudou', state);
     });
+
+    client.on('remote_session_saved', () => {
+        console.log('Sessão remota salva');
+    });
     
     
     client.initialize();
+
 }
 
-function createOldSession(nameSession) {
+function createOldSession(nameSession, store) {
     return new Promise((resolve, reject) => {
         let client = new Client({
-            authStrategy: new LocalAuth({
-                clientId: nameSession
+            authStrategy: new RemoteAuth({
+                store: store,
+                clientId: nameSession,
+                backupSyncIntervalMs: 300000
             }),
             puppeteer: {
                 headless: true,
-                args: ['--no-sandbox', '--disable-gpu'],
-            },
-            webVersionCache: {
-                type: 'remote',
-                remotePath: `https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/${wwebVersion}.html`,
-            },
+                executablePath: process.env.GOOGLE_CHROME_BIN || '/usr/bin/google-chrome',
+                args: ['--no-sandbox', '--disable-gpu', '--disable-setuid-sandbox'],
+            }
         });
 
         client.on('qr', async (qr) => {
             console.log('QR code necessário');
-            await client.destroy();
+            if(client != undefined) await client.destroy();
+            await store.delete({session: `RemoteAuth-${nameSession}`});
             sessions[nameSession] = null;
             client = null;
             reject({ state: false, data: "escanear-qr-code" });
@@ -97,14 +106,20 @@ function createOldSession(nameSession) {
         client.on('auth_failure', async (message) => {
             console.log('Autenticação falhou!');
             console.log(message);
-            await client.destroy();
+            if(client != undefined) await client.destroy();
+            await store.delete({session: `RemoteAuth-${nameSession}`});
             sessions[nameSession] = null;
             client = null;
             reject({ state: false, data: message });
         });
 
-        client.on('disconnected', () => {
+        client.on('disconnected', async () => {
             console.log('Cliente desconectado!');
+            if(client != undefined) await client.destroy();
+            await store.delete({session: `RemoteAuth-${nameSession}`});
+            sessions[nameSession] = null;
+            client = null;
+            reject({ state: false, data: "wpp-web-desconectado" });
         });
 
         client.on('ready', () => {
@@ -117,11 +132,16 @@ function createOldSession(nameSession) {
             console.log('Status mudou', state);
         });
 
+        client.on('remote_session_saved', () => {
+            console.log('Sessão remota salva');
+        });
+
         // Inicialize o cliente
         client.initialize().catch((error) => {
             console.error('Erro durante a inicialização do cliente:', error);
             reject({ state: false, data: error });
         });
+
     });
 }
 

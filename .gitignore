@@ -4,3 +4,5 @@
 /.wwebjs_cache
 destinos.json
 msg_resultados.txt
+/sessions
+.env
