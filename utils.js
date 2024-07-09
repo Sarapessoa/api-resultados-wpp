@@ -67,7 +67,11 @@ async function getDestinos(session) {
 
         return objSession;
     } catch (erro) {
-        throw erro;
+        if (erro.code === 'ENOENT') {
+            return [], null
+        } else {
+            throw erro;
+        }
     }
 }
 

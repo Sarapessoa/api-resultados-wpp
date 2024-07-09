@@ -33,21 +33,22 @@ const sendResultadosMesasge = async (req, res) => {
 
         const { destinos, contact } = await getDestinos(session);
 
+        if(destinos.length == 0) {
+            return res.status(404).send('Nenhum destinatário encontrado!');
+        };
+
         try {
 
             const aviso = await getTextForResultados();
             for (const destino of destinos) {
 
                 const result = await client.sendMessage(destino, msg);
-                // console.log('Result: ', result);
 
                 if(contact != "" && contact != undefined) {
                     const resultAviso = await client.sendMessage(destino, aviso);
-                    // console.log('Result: ', resultAviso); // return object success
                     
                     const contactVcard = await client.getContactById(contact);                 
                     const resultContact = await client.sendMessage(destino, contactVcard, { parseVCards: true });
-                    // console.log('Result: ', resultContact);
                 }
 
             }
@@ -58,8 +59,6 @@ const sendResultadosMesasge = async (req, res) => {
         }
 
     }
-
-    console.log(allClients)
 
     return res.status(200).send('Mensagens enviadas com sucesso!');
 };
